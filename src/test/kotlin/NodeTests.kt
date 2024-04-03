@@ -1,21 +1,36 @@
 import org.example.Address
 import org.example.Follower
 import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
 
 class NodeTests {
 
+
+
     @Test
     fun `When a tick happens we increase the clock`() {
+        // Given
         val f = Follower(Address("127.0.0.1", 9001), "NodeA")
+
+        // When
         val tickedFollower = f.tick().tick()
-        tickedFollower.clock == 2
+
+        // Then
+        assertEquals(2, tickedFollower.clock)
     }
 
     @Test
     fun `A Node can send a message to another Node`() {
+        // Given
         val nodeA = Follower(Address("127.0.0.1", 9001), "NodeA")
         val nodeB = Follower(Address("127.0.0.1", 9002), "NodeB")
-        nodeA.send(nodeB, "messageA")
+
+        // When
+        nodeA.send(nodeB.address, "1")
+        val newNodeB = nodeB.tick()
+
+        // Then
+        assertEquals(1, newNodeB.state)
     }
 
 
