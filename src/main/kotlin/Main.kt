@@ -16,13 +16,33 @@ abstract class Node(open val address: Address, open val name: String, open val c
     abstract fun send(address: Address, content: String)
 }
 
+data class Candidate(override val address: Address,
+                     override val name: String,
+                     override val clock: Int = 0,
+                     override val state: Int = 0) :Node(address, name, clock, state) {
+    override fun tick(): Node {
+        TODO("Not yet implemented")
+    }
+
+    //TODO MOVE TO NODE
+    override fun receive(message: Message): Node {
+        TODO("Not yet implemented")
+    }
+
+    //TODO MOVE TO NODE
+    override fun send(address: Address, content: String) {
+        TODO("Not yet implemented")
+    }
+
+}
+
 data class Follower(override val address: Address,
                     override val name: String,
                     override val clock: Int = 0,
                     override val state: Int = 0) :Node(address, name, clock, state) {
 
     //TODO: This has to be moved to the Node class
-    override fun tick(): Follower {
+    override fun tick(): Node {
         val messages = receiveMessages()
 
         val newState = messages.fold(state) { acc, msg ->
