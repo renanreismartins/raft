@@ -6,8 +6,8 @@ fun main() {
 
 
 val network = mutableMapOf<Address, List<Message>>()
-data class Message(val src: Address, val dest: Address, val content: String)
 
+data class Message(val src: Address, val dest: Address, val content: String)
 data class Address(val host: String, val port: Int)
 
 abstract class Node(open val address: Address, open val name: String, open val clock: Int = 0, open val state: Int) {
@@ -17,9 +17,11 @@ abstract class Node(open val address: Address, open val name: String, open val c
 }
 
 data class Candidate(override val address: Address,
-                     override val name: String,
-                     override val clock: Int = 0,
-                     override val state: Int = 0) :Node(address, name, clock, state) {
+     override val name: String,
+     override val clock: Int = 0,
+     override val state: Int = 0
+): Node(address, name, clock, state) {
+
     override fun tick(): Node {
         TODO("Not yet implemented")
     }
@@ -36,10 +38,12 @@ data class Candidate(override val address: Address,
 
 }
 
-data class Follower(override val address: Address,
-                    override val name: String,
-                    override val clock: Int = 0,
-                    override val state: Int = 0) :Node(address, name, clock, state) {
+data class Follower(
+    override val address: Address,
+    override val name: String,
+    override val clock: Int = 0,
+    override val state: Int = 0
+): Node(address, name, clock, state) {
 
     //TODO: This has to be moved to the Node class
     override fun tick(): Node {
