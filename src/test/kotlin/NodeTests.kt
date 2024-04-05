@@ -53,9 +53,9 @@ class NodeTests {
         val follower = Follower(Address("127.0.0.1", 9001), "NodeA")
 
         // When
-        val stillFollower = follower.tick().tick().tick().tick() // TODO: we should assert on the 3rd or 4th tick?
+        val candidate = follower.tick().tick().tick().tick() // TODO: we should assert on the 3rd or 4th tick?
 
-        assertTrue(stillFollower is Candidate)
+        assertTrue(candidate is Candidate)
     }
 
 //    fun `Follower stays as a follower if it receives a heartbeat before the election timeout (3 ticks)`() {

@@ -7,6 +7,34 @@ fun main() {
 
 val network = mutableMapOf<Address, List<Message>>()
 
+
+typealias NetworkDelay = Int
+data class NetworkMessage(val message: Message, val delay: NetworkDelay)
+
+class Network(initialMessages: Map<Address, List<NetworkMessage>> = emptyMap()) {
+    private val messages = initialMessages.toMutableMap()
+
+    fun get(address: Address): List<Message> {
+        // get all messages for address with 0 delay and store
+        val (messagesToDeliver, remaining) = messages[address]
+            ?.partition { (_, delay) ->
+                delay == 0
+            } ?: (listOf<NetworkMessage>() to listOf())
+
+        // decrement remaining messages for that address
+        messages[address] = remaining.map { networkMessage ->
+            networkMessage.copy(delay = networkMessage.delay - 1)
+        }
+
+        // return store messages
+        return messagesToDeliver.map { it.message }
+    }
+
+    fun add(message: Message, delay: NetworkDelay = 0) {
+        messages[message.dest] = messages[message.dest]?.plus(NetworkMessage(message, delay)) ?: listOf()
+    }
+}
+
 data class Message(val src: Address, val dest: Address, val content: String)
 data class Address(val host: String, val port: Int)
 
