@@ -11,6 +11,19 @@ val network = mutableMapOf<Address, List<Message>>()
 typealias NetworkDelay = Int
 data class NetworkMessage(val message: Message, val delay: NetworkDelay)
 
+/**
+ * TODO: We need to convert to absolute times for consumptions. Otherwise we have problems because
+ * delay is relative.
+ * Imagine Node A and B, A ticking first - with A1 meaning A at tick 1
+ * A1 ticks and sends message to B, which cannot be consumed on B1, must be at B2
+ * B1 ticks and sends a message to A, which cannot be consumed at A1, must be at A2
+ *
+ * In the current system, with a relative delay = 0, message A -> B would be consumed at B1, as it's on the network with delay 0 before B ticks
+ * But, message B -> A would be correct
+ *
+ * If you change the default delay to 1, message A -> B would be consumed at B2 (good), but the message B -> A would be wrong
+ * The message is sent to A, when A2 ticks, the delay decrements. Instead, we need to tick A again, so the message will only be consumed at A3
+ */
 class Network(initialMessages: Map<Address, List<NetworkMessage>> = emptyMap()) {
     private val messages = initialMessages.toMutableMap()
 

@@ -35,18 +35,6 @@ class NodeTests {
         assertEquals(1, newNodeB.state)
     }
 
-    /*
-    We need to develop a Network class that will allow us to insert messages from the tests.
-    The messages should include a 'delay', the delay will be how many ticks a Node has to wait to consume? (or process?)
-    the message. The reason to use a delay instead of an absolute value for the clock is that Nodes can have different clocks
-    and the message could be not consumed. This also represents better the network delays, give the algorithm does not include
-    timestamps on the messages.
-
-    Possible implementation: The network will deliver only messages with delay = 0 and decrement the delay of the remaining
-    messages for that node. (Should the network 'wrap' the Message, so we do not add artificial mechanisms as 'delay' on the
-    messages?)
-     */
-
     @Test
     fun `Follower becomes a Candidate if it does not receive a heartbeat before the election timeout (3 ticks)`() {
         // Given
