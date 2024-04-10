@@ -9,7 +9,8 @@ val network = mutableMapOf<Address, List<Message>>()
 
 
 typealias NetworkDelay = Int
-data class NetworkMessage(val message: Message, val delay: NetworkDelay)
+typealias DeliveryTime = Int
+data class NetworkMessage(val message: Message, val deliveryTime: DeliveryTime)
 
 /**
  * TODO: We need to convert to absolute times for consumptions. Otherwise we have problems because
@@ -25,26 +26,29 @@ data class NetworkMessage(val message: Message, val delay: NetworkDelay)
  * The message is sent to A, when A2 ticks, the delay decrements. Instead, we need to tick A again, so the message will only be consumed at A3
  */
 class Network(initialMessages: Map<Address, List<NetworkMessage>> = emptyMap()) {
+    private var clock = 0
     private val messages = initialMessages.toMutableMap()
 
     fun get(address: Address): List<Message> {
         // get all messages for address with 0 delay and store
         val (messagesToDeliver, remaining) = messages[address]
-            ?.partition { (_, delay) ->
-                delay == 0
+            ?.partition { (_, deliveryTime) ->
+                deliveryTime <= clock
             } ?: (listOf<NetworkMessage>() to listOf())
 
-        // decrement remaining messages for that address
-        messages[address] = remaining.map { networkMessage ->
-            networkMessage.copy(delay = networkMessage.delay - 1)
-        }
+        messages[address] = remaining
 
         // return store messages
         return messagesToDeliver.map { it.message }
     }
 
     fun add(message: Message, delay: NetworkDelay = 0) {
-        messages[message.dest] = messages[message.dest]?.plus(NetworkMessage(message, delay)) ?: listOf()
+        val networkMessage = NetworkMessage(message, clock + 1 + delay)
+        messages[message.dest] = messages[message.dest]?.plus(networkMessage) ?: listOf(networkMessage)
+    }
+
+    fun tick() {
+        clock += 1
     }
 }
 
