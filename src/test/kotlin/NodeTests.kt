@@ -1,18 +1,17 @@
 import org.example.Address
 import org.example.Candidate
 import org.example.Follower
+import org.example.Network
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class NodeTests {
 
-
-
     @Test
     fun `When a tick happens we increase the clock`() {
         // Given
-        val f = Follower(Address("127.0.0.1", 9001), "NodeA")
+        val f = Follower(Address("127.0.0.1", 9001), "NodeA", network = Network())
 
         // When
         val tickedFollower = f.tick().tick()
@@ -24,11 +23,13 @@ class NodeTests {
     @Test
     fun `A Node can send a message to another Node`() {
         // Given
-        val nodeA = Follower(Address("127.0.0.1", 9001), "NodeA")
-        val nodeB = Follower(Address("127.0.0.1", 9002), "NodeB")
+        val network = Network()
+        val nodeA = Follower(Address("127.0.0.1", 9001), "NodeA", network = network)
+        val nodeB = Follower(Address("127.0.0.1", 9002), "NodeB", network = network)
 
         // When
         nodeA.send(nodeB.address, "1")
+        network.tick()
         val newNodeB = nodeB.tick()
 
         // Then
@@ -38,10 +39,12 @@ class NodeTests {
     @Test
     fun `Follower becomes a Candidate if it does not receive a heartbeat before the election timeout (3 ticks)`() {
         // Given
-        val follower = Follower(Address("127.0.0.1", 9001), "NodeA")
+        val network = Network()
+        val follower = Follower(Address("127.0.0.1", 9001), "NodeA", network = network)
 
         // When
-        val candidate = follower.tick().tick().tick().tick() // TODO: we should assert on the 3rd or 4th tick?
+        network.tick(4)
+        val candidate = follower.tick(4)
 
         assertTrue(candidate is Candidate)
     }

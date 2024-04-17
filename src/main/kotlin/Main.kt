@@ -4,27 +4,10 @@ fun main() {
     println("Hello World!")
 }
 
-
-val network = mutableMapOf<Address, List<Message>>()
-
-
 typealias NetworkDelay = Int
 typealias DeliveryTime = Int
 data class NetworkMessage(val message: Message, val deliveryTime: DeliveryTime)
 
-/**
- * TODO: We need to convert to absolute times for consumptions. Otherwise we have problems because
- * delay is relative.
- * Imagine Node A and B, A ticking first - with A1 meaning A at tick 1
- * A1 ticks and sends message to B, which cannot be consumed on B1, must be at B2
- * B1 ticks and sends a message to A, which cannot be consumed at A1, must be at A2
- *
- * In the current system, with a relative delay = 0, message A -> B would be consumed at B1, as it's on the network with delay 0 before B ticks
- * But, message B -> A would be correct
- *
- * If you change the default delay to 1, message A -> B would be consumed at B2 (good), but the message B -> A would be wrong
- * The message is sent to A, when A2 ticks, the delay decrements. Instead, we need to tick A again, so the message will only be consumed at A3
- */
 class Network(initialMessages: Map<Address, List<NetworkMessage>> = emptyMap()) {
     private var clock = 0
     private val messages = initialMessages.toMutableMap()
@@ -47,15 +30,25 @@ class Network(initialMessages: Map<Address, List<NetworkMessage>> = emptyMap()) 
         messages[message.dest] = messages[message.dest]?.plus(networkMessage) ?: listOf(networkMessage)
     }
 
-    fun tick() {
-        clock += 1
+    fun tick(ticks: Int = 1): Network {
+        clock += ticks
+        return this
     }
 }
 
 data class Message(val src: Address, val dest: Address, val content: String)
 data class Address(val host: String, val port: Int)
 
-abstract class Node(open val address: Address, open val name: String, open val clock: Int = 0, open val state: Int) {
+abstract class Node(
+    open val address: Address,
+    open val name: String,
+    open val clock: Int = 0,
+    open val state: Int,
+    open val network: Network
+) {
+    fun tick(ticks: Int): Node {
+        return (0 .. ticks).fold(this) { acc, _ -> acc.tick() }
+    }
     abstract fun tick(): Node
     abstract fun receive(message: Message): Node
     abstract fun send(address: Address, content: String)
@@ -64,8 +57,9 @@ abstract class Node(open val address: Address, open val name: String, open val c
 data class Candidate(override val address: Address,
      override val name: String,
      override val clock: Int = 0,
-     override val state: Int = 0
-): Node(address, name, clock, state) {
+     override val state: Int = 0,
+     override val network: Network
+): Node(address, name, clock, state, network) {
 
     override fun tick(): Node {
         TODO("Not yet implemented")
@@ -87,24 +81,21 @@ data class Follower(
     override val address: Address,
     override val name: String,
     override val clock: Int = 0,
-    override val state: Int = 0
-): Node(address, name, clock, state) {
+    override val state: Int = 0,
+    override val network: Network
+): Node(address, name, clock, state, network) {
 
     //TODO: This has to be moved to the Node class
     override fun tick(): Node {
-        val messages = receiveMessages()
+        val messages = network.get(this.address)
 
         val newState = messages.fold(state) { acc, msg ->
             msg.content.toInt() + acc
         }
 
-        return this.copy(clock =  clock + 1, state = newState)
-    }
 
-    private fun receiveMessages(): List<Message> {
-        val messages = network.getOrDefault(this.address, emptyList())
-        network[this.address] = emptyList()
-        return messages
+
+        return this.copy(clock = clock + 1, state = newState)
     }
 
     override fun receive(message: Message): Node {
@@ -112,8 +103,6 @@ data class Follower(
     }
 
     override fun send(destination: Address, content: String) {
-        val message = Message(this.address, destination, content) // TODO add tiny type Source and Destination
-        val messages = network.getOrDefault(destination, emptyList()) + message
-        network[destination] = messages
+        network.add(Message(this.address, destination, content)) // TODO add tiny type Source and Destination
     }
 }

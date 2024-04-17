@@ -62,6 +62,7 @@ class NetworkTests {
 
         val network = Network()
         network.tick()
+
         network.add(Message(source, destination, "A"), 0)
         network.tick()
 
