@@ -44,7 +44,8 @@ abstract class Node(
     open val name: String,
     open val clock: Int = 0,
     open val state: Int,
-    open val network: Network
+    open val network: Network,
+    open val messages: List<Message> = emptyList()
 ) {
     fun tick(ticks: Int): Node {
         return (0 .. ticks).fold(this) { acc, _ -> acc.tick() }
@@ -58,8 +59,9 @@ data class Candidate(override val address: Address,
      override val name: String,
      override val clock: Int = 0,
      override val state: Int = 0,
-     override val network: Network
-): Node(address, name, clock, state, network) {
+     override val network: Network,
+     override val messages: List<Message> = emptyList()
+): Node(address, name, clock, state, network, messages) {
 
     override fun tick(): Node {
         TODO("Not yet implemented")
@@ -82,20 +84,20 @@ data class Follower(
     override val name: String,
     override val clock: Int = 0,
     override val state: Int = 0,
-    override val network: Network
-): Node(address, name, clock, state, network) {
+    override val network: Network,
+    override val messages: List<Message> = emptyList(),
+): Node(address, name, clock, state, network, messages) {
 
     //TODO: This has to be moved to the Node class
     override fun tick(): Node {
-        val messages = network.get(this.address)
+        val tickMessages = network.get(this.address)
 
-        val newState = messages.fold(state) { acc, msg ->
+        val newState = tickMessages.fold(state) { acc, msg ->
             msg.content.toInt() + acc
         }
 
 
-
-        return this.copy(clock = clock + 1, state = newState)
+        return this.copy(clock = clock + 1, state = newState, messages = messages + tickMessages)
     }
 
     override fun receive(message: Message): Node {
