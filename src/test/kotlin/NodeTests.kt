@@ -7,19 +7,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class NodeTests {
-
-    @Test
-    fun `When a tick happens we increase the clock`() {
-        // Given
-        val f = Follower(Address("127.0.0.1", 9001), "NodeA", network = Network())
-
-        // When
-        val tickedFollower = f.tick().tick()
-
-        // Then
-        assertEquals(2, tickedFollower.clock)
-    }
-
     @Test
     fun `A Node can send a message to another Node`() {
         // Given
@@ -43,8 +30,17 @@ class NodeTests {
         val follower = Follower(Address("127.0.0.1", 9001), "NodeA", network = network)
 
         // When
-        network.tick(4)
-        val candidate = follower.tick(4)
+        network.tick()
+        val f1 = follower.tick()
+
+        network.tick()
+        val f2 = f1.tick()
+
+        network.tick()
+        val f3 = f2.tick()
+
+        network.tick()
+        val candidate = f3.tick()
 
         assertTrue(candidate is Candidate)
     }

@@ -9,7 +9,7 @@ typealias DeliveryTime = Int
 data class NetworkMessage(val message: Message, val deliveryTime: DeliveryTime)
 
 class Network(initialMessages: Map<Address, List<NetworkMessage>> = emptyMap()) {
-    private var clock = 0
+    var clock = 0
     private val messages = initialMessages.toMutableMap()
 
     fun get(address: Address): List<Message> {
@@ -39,13 +39,15 @@ class Network(initialMessages: Map<Address, List<NetworkMessage>> = emptyMap()) 
 data class Message(val src: Address, val dest: Address, val content: String)
 data class Address(val host: String, val port: Int)
 
+
+typealias ReceivedAt = Int
+typealias MessageLogEntry = Pair<ReceivedAt, Message>
 abstract class Node(
     open val address: Address,
     open val name: String,
-    open val clock: Int = 0,
     open val state: Int,
     open val network: Network,
-    open val messages: List<Message> = emptyList()
+    open val messages: List<MessageLogEntry> = emptyList()
 ) {
     fun tick(ticks: Int): Node {
         return (0 .. ticks).fold(this) { acc, _ -> acc.tick() }
@@ -57,11 +59,10 @@ abstract class Node(
 
 data class Candidate(override val address: Address,
      override val name: String,
-     override val clock: Int = 0,
      override val state: Int = 0,
      override val network: Network,
-     override val messages: List<Message> = emptyList()
-): Node(address, name, clock, state, network, messages) {
+     override val messages: List<MessageLogEntry> = emptyList()
+): Node(address, name, state, network, messages) {
 
     override fun tick(): Node {
         TODO("Not yet implemented")
@@ -82,13 +83,11 @@ data class Candidate(override val address: Address,
 data class Follower(
     override val address: Address,
     override val name: String,
-    override val clock: Int = 0,
     override val state: Int = 0,
     override val network: Network,
-    override val messages: List<Message> = emptyList(),
-): Node(address, name, clock, state, network, messages) {
+    override val messages: List<MessageLogEntry> = emptyList(),
+): Node(address, name, state, network, messages) {
 
-    //TODO: This has to be moved to the Node class
     override fun tick(): Node {
         val tickMessages = network.get(this.address)
 
@@ -96,8 +95,14 @@ data class Follower(
             msg.content.toInt() + acc
         }
 
+        val messageLog = messages + tickMessages.map { network.clock to it }
 
-        return this.copy(clock = clock + 1, state = newState, messages = messages + tickMessages)
+        if (messageLog.isEmpty() && network.clock > 3) {
+            return Candidate(address, name, state, network, messageLog)
+        }
+
+        // first = ReceivedAt
+        return if (messageLog.isNotEmpty() && network.clock - messageLog.last().first > 3) Candidate(address, name, state, network, messageLog) else return this.copy(state = newState, messages = messageLog)
     }
 
     override fun receive(message: Message): Node {
