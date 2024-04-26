@@ -47,6 +47,7 @@ abstract class Node(
     open val name: String,
     open val state: Int,
     open val network: Network,
+    open val peers: List<Address>,
     open val messages: List<MessageLogEntry> = emptyList()
 ) {
     fun tick(ticks: Int): Node {
@@ -54,15 +55,18 @@ abstract class Node(
     }
     abstract fun tick(): Node
     abstract fun receive(message: Message): Node
-    abstract fun send(address: Address, content: String)
+    fun send(destination: Address, content: String) {
+        network.add(Message(this.address, destination, content)) // TODO add tiny type Source and Destination
+    }
 }
 
 data class Candidate(override val address: Address,
      override val name: String,
      override val state: Int = 0,
      override val network: Network,
+     override val peers: List<Address>,
      override val messages: List<MessageLogEntry> = emptyList()
-): Node(address, name, state, network, messages) {
+): Node(address, name, state, network, peers, messages) {
 
     override fun tick(): Node {
         TODO("Not yet implemented")
@@ -73,11 +77,6 @@ data class Candidate(override val address: Address,
         TODO("Not yet implemented")
     }
 
-    //TODO MOVE TO NODE
-    override fun send(address: Address, content: String) {
-        TODO("Not yet implemented")
-    }
-
 }
 
 data class Follower(
@@ -85,8 +84,9 @@ data class Follower(
     override val name: String,
     override val state: Int = 0,
     override val network: Network,
+    override val peers: List<Address>,
     override val messages: List<MessageLogEntry> = emptyList(),
-): Node(address, name, state, network, messages) {
+): Node(address, name, state, network, peers, messages) {
 
     override fun tick(): Node {
         val tickMessages = network.get(this.address)
@@ -98,18 +98,18 @@ data class Follower(
         val messageLog = messages + tickMessages.map { network.clock to it }
 
         if (messageLog.isEmpty() && network.clock > 3) {
-            return Candidate(address, name, state, network, messageLog)
+            val candidate = Candidate(address, name, state, network, peers, messageLog)
+
+            peers.forEach { peer -> candidate.send(peer, "REQUEST FOR VOTES") } // TODO Refactor to return the messages to be sent instead of a side effect
+
+            return candidate
         }
 
         // first = ReceivedAt
-        return if (messageLog.isNotEmpty() && network.clock - messageLog.last().first > 3) Candidate(address, name, state, network, messageLog) else return this.copy(state = newState, messages = messageLog)
+        return if (messageLog.isNotEmpty() && network.clock - messageLog.last().first > 3) Candidate(address, name, state, network, peers, messageLog) else return this.copy(state = newState, messages = messageLog)
     }
 
     override fun receive(message: Message): Node {
         TODO("Not yet implemented")
-    }
-
-    override fun send(destination: Address, content: String) {
-        network.add(Message(this.address, destination, content)) // TODO add tiny type Source and Destination
     }
 }
