@@ -97,9 +97,12 @@ data class Follower(
         val tickMessages = network.get(this.address)
 
         val newState = tickMessages.fold(state) { acc, msg ->
-            println("RECEIVED $msg")
-            acc
-//            msg.content.toInt() + acc
+            try {
+                msg.content.toInt() + acc
+            } catch (e: NumberFormatException) {
+                println("RECEIVED $msg")
+                acc
+            }
         }
 
         val messageLog = messages + tickMessages.map { network.clock to it }
