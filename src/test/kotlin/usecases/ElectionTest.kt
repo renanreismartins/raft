@@ -1,11 +1,13 @@
 package usecases
 
 import org.example.Address
+import org.example.Candidate
 import org.example.Config
 import org.example.Follower
 import org.example.Network
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class ElectionTest {
 
@@ -19,7 +21,7 @@ class ElectionTest {
         val remainsFollowerAddress = Address("127.0.0.1", 9002)
 
         val willPromote = Follower(willPromoteAddress, "NodeA", network = network, peers = listOf(remainsFollowerAddress), config = Config(3))
-        val remainsFollower = Follower(willPromoteAddress, "NodeA", network = network, peers = listOf(remainsFollowerAddress), config = Config(10))
+        val remainsFollower = Follower(remainsFollowerAddress, "NodeA", network = network, peers = listOf(remainsFollowerAddress), config = Config(10))
 
         // When
         network.tick()
@@ -42,8 +44,8 @@ class ElectionTest {
         val followerWithRequest =  follower.tick()
 
         // Then
-        //TODO ASSERT ONE NODE IS CANDIDATE AND THE OTHER IS FOLLOWER
-        //TODO this will fail because all the followers are becoming candidates at the same time
+        assertTrue(follower is Follower)
+        assertTrue(candidate is Candidate)
         assertEquals("REQUEST FOR VOTES", followerWithRequest.messages.first().second.content)
     }
 }
