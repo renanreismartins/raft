@@ -36,6 +36,8 @@ class Network(initialMessages: Map<Address, List<NetworkMessage>> = emptyMap()) 
     }
 }
 
+// TODO: Figure out a good type for this when we start cleaning
+data class Config(val electionTimeout: Int = 3)
 data class Message(val src: Address, val dest: Address, val content: String)
 data class Address(val host: String, val port: Int)
 
@@ -48,7 +50,8 @@ abstract class Node(
     open val state: Int,
     open val network: Network,
     open val peers: List<Address>,
-    open val messages: List<MessageLogEntry> = emptyList()
+    open val messages: List<MessageLogEntry> = emptyList(),
+    open val config: Config = Config(),
 ) {
     fun tick(ticks: Int): Node {
         return (0 .. ticks).fold(this) { acc, _ -> acc.tick() }
@@ -65,7 +68,8 @@ data class Candidate(override val address: Address,
      override val state: Int = 0,
      override val network: Network,
      override val peers: List<Address>,
-     override val messages: List<MessageLogEntry> = emptyList()
+     override val messages: List<MessageLogEntry> = emptyList(),
+     override val config: Config = Config(),
 ): Node(address, name, state, network, peers, messages) {
 
     override fun tick(): Node {
@@ -86,6 +90,7 @@ data class Follower(
     override val network: Network,
     override val peers: List<Address>,
     override val messages: List<MessageLogEntry> = emptyList(),
+    override val config: Config = Config(),
 ): Node(address, name, state, network, peers, messages) {
 
     override fun tick(): Node {
@@ -97,7 +102,7 @@ data class Follower(
 
         val messageLog = messages + tickMessages.map { network.clock to it }
 
-        if (messageLog.isEmpty() && network.clock > 3) {
+        if (messageLog.isEmpty() && network.clock > config.electionTimeout) {
             val candidate = Candidate(address, name, state, network, peers, messageLog)
 
             peers.forEach { peer -> candidate.send(peer, "REQUEST FOR VOTES") } // TODO Refactor to return the messages to be sent instead of a side effect
@@ -105,8 +110,7 @@ data class Follower(
             return candidate
         }
 
-        // first = ReceivedAt
-        return if (messageLog.isNotEmpty() && network.clock - messageLog.last().first > 3) Candidate(address, name, state, network, peers, messageLog) else return this.copy(state = newState, messages = messageLog)
+        return if (messageLog.isNotEmpty() && network.clock - messageLog.last().first > config.electionTimeout) Candidate(address, name, state, network, peers, messageLog) else return this.copy(state = newState, messages = messageLog)
     }
 
     override fun receive(message: Message): Node {

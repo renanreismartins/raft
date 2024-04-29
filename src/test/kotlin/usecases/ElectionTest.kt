@@ -1,6 +1,7 @@
 package usecases
 
 import org.example.Address
+import org.example.Config
 import org.example.Follower
 import org.example.Network
 import org.junit.jupiter.api.Test
@@ -17,8 +18,8 @@ class ElectionTest {
         val willPromoteAddress = Address("127.0.0.1", 9001)
         val remainsFollowerAddress = Address("127.0.0.1", 9002)
 
-        val willPromote = Follower(willPromoteAddress, "NodeA", network = network, peers = listOf(remainsFollowerAddress))
-        val remainsFollower = Follower(willPromoteAddress, "NodeA", network = network, peers = listOf(remainsFollowerAddress))
+        val willPromote = Follower(willPromoteAddress, "NodeA", network = network, peers = listOf(remainsFollowerAddress), config = Config(3))
+        val remainsFollower = Follower(willPromoteAddress, "NodeA", network = network, peers = listOf(remainsFollowerAddress), config = Config(10))
 
         // When
         network.tick()
