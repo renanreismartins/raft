@@ -11,7 +11,19 @@ data class Candidate(
 ): Node(address, name, state, network, peers, messages) {
 
     override fun tick(): Node {
-        TODO("Not yet implemented")
+        val tickMessages = network.get(this.address)
+
+        val newState = tickMessages.fold(state) { acc, msg ->
+            try {
+                msg.content.toInt() + acc
+            } catch (e: NumberFormatException) {
+                println("RECEIVED $msg")
+                acc
+            }
+        }
+
+        val messageLog = messages + tickMessages.map { network.clock to it }
+        return this.copy(state = newState, messages = messageLog)
     }
 
     //TODO MOVE TO NODE

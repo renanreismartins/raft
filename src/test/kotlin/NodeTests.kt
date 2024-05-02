@@ -49,7 +49,6 @@ class NodeTests {
         assertTrue(candidate is Candidate)
     }
 
-    // TODO Add a Config on the Node so we can change the timeouts
     @Test
     fun `A Request for Votes is sent when a Follower Becomes a Candidate (timeout 3 ticks)`() {
         // Given

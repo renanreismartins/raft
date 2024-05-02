@@ -18,6 +18,11 @@ data class Follower(
                 msg.content.toInt() + acc
             } catch (e: NumberFormatException) {
                 println("RECEIVED $msg")
+
+                if ("REQUEST FOR VOTES" == msg.content) {
+                    send(msg.src, "VOTE FROM FOLLOWER")
+                }
+
                 acc
             }
         }
@@ -32,6 +37,7 @@ data class Follower(
             return candidate
         }
 
+        //TODO In this scenario we are promoting a Followe to Candidate but not sending a Request For Votes, write a test and fix
         return if (messageLog.isNotEmpty() && network.clock - messageLog.last().first > config.electionTimeout) Candidate(
             address,
             name,

@@ -13,7 +13,7 @@ class ElectionTest {
 
     // TODO increment the scope of this test so the Candidate receives a Vote from the Follower
     @Test
-    fun `A Request for Votes is sent when a Follower Becomes a Candidate (timeout 3 ticks) and the Follower receives the request`() {
+    fun `A Request for Votes is sent when a Follower Becomes a Candidate (timeout 3 ticks), the Follower receives the request and sends its vote to the Candidate`() {
         // Given
         val network = Network()
 
@@ -43,9 +43,15 @@ class ElectionTest {
 
         val followerWithRequest =  follower.tick()
 
-        // Then
+        // Then Candidate got promoted and sent its Request for Votes to the Follower
         assertTrue(follower is Follower)
         assertTrue(candidate is Candidate)
         assertEquals("REQUEST FOR VOTES", followerWithRequest.messages.first().second.content)
+
+        // Then Follower sends the Vote to the Candidate
+        network.tick()
+        val candidateWithVote = candidate.tick()
+
+        assertEquals("VOTE FROM FOLLOWER", candidateWithVote.messages.first().second.content)
     }
 }
