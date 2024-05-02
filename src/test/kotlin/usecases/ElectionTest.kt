@@ -5,6 +5,7 @@ import org.example.Candidate
 import org.example.Config
 import org.example.Follower
 import org.example.Network
+import org.example.TimeMachine
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -24,33 +25,15 @@ class ElectionTest {
         val remainsFollower = Follower(remainsFollowerAddress, "NodeA", network = network, peers = listOf(remainsFollowerAddress), config = Config(10))
 
         // When
-        network.tick()
-        val wp1 = willPromote.tick()
-        val rf1 = remainsFollower.tick()
-
-        network.tick()
-        val wp2 = wp1.tick()
-        val rf2 = rf1.tick()
-
-        network.tick()
-        val wp3 = wp2.tick()
-        val rf3 = rf2.tick()
-
-        network.tick()
-        val candidate = wp3.tick()
-        val follower = rf3.tick()
-        network.tick()
-
-        val followerWithRequest =  follower.tick()
+        val timeMachine = TimeMachine(network, willPromote, remainsFollower).tick(4)
+        val (_, becameCandidate, remainedFollower) = timeMachine
 
         // Then Candidate got promoted and sent its Request for Votes to the Follower
-        assertTrue(follower is Follower)
-        assertTrue(candidate is Candidate)
-        assertEquals("REQUEST FOR VOTES", followerWithRequest.messages.first().second.content)
+        assertTrue(becameCandidate is Candidate)
+        assertTrue(remainedFollower is Follower)
+        assertEquals("REQUEST FOR VOTES", remainedFollower.messages.first().second.content)
 
-        // Then Follower sends the Vote to the Candidate
-        network.tick()
-        val candidateWithVote = candidate.tick()
+        val (_, candidateWithVote, _)= timeMachine.tick()
 
         assertEquals("VOTE FROM FOLLOWER", candidateWithVote.messages.first().second.content)
     }
