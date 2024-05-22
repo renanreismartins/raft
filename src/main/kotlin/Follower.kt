@@ -37,7 +37,7 @@ data class Follower(
             return candidate
         }
 
-        //TODO In this scenario we are promoting a Followe to Candidate but not sending a Request For Votes, write a test and fix
+        //TODO In this scenario we are promoting a Follower to Candidate but not sending a Request For Votes, write a test and fix
         return if (messageLog.isNotEmpty() && network.clock - messageLog.last().first > config.electionTimeout) Candidate(
             address,
             name,

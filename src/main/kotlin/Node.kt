@@ -6,8 +6,12 @@ data class Config(val electionTimeout: Int = 3)
 typealias ReceivedAt = Int
 typealias MessageLogEntry = Pair<ReceivedAt, Message>
 
-data class Message(val src: Address, val dest: Address, val content: String)
 data class Address(val host: String, val port: Int)
+
+sealed class Message(open val src: Address, open val dest: Address, open val content: String)
+data class RequestForVotes(override val src: Address, override val dest: Address, override val content: String) : Message(src, dest, content)
+data class VoteFromFollower(override val src: Address, override val dest: Address, override val content: String) : Message(src, dest, content)
+data class Heartbeat(override val src: Address, override val dest: Address, override val content: String) : Message(src, dest, content)
 
 abstract class Node(
     open val address: Address,
@@ -24,6 +28,6 @@ abstract class Node(
     abstract fun tick(): Node
     abstract fun receive(message: Message): Node
     fun send(destination: Address, content: String) {
-        network.add(Message(this.address, destination, content)) // TODO add tiny type Source and Destination
+        network.add(Heartbeat(this.address, destination, content)) // TODO add tiny type Source and Destination
     }
 }

@@ -12,9 +12,8 @@ import kotlin.test.assertTrue
 
 class ElectionTest {
 
-    // TODO increment the scope of this test so the Candidate receives a Vote from the Follower
     @Test
-    fun `A Request for Votes is sent when a Follower Becomes a Candidate (timeout 3 ticks), the Follower receives the request and sends its vote to the Candidate`() {
+    fun `A Request for Votes is sent when a Follower becomes a Candidate (timeout 3 ticks), the Follower receives the request and sends its vote to the Candidate`() {
         // Given
         val network = Network()
 
