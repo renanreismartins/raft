@@ -8,7 +8,7 @@ typealias MessageLogEntry = Pair<ReceivedAt, Message>
 
 data class Address(val host: String, val port: Int)
 
-sealed class Message(open val src: Address, open val dest: Address, open val content: String)
+sealed class Message(open val src: Address, open val dest: Address, open val content: String) //TODO remove 'content' from the Message and add it to the subclasses if we have one type of Message without 'content'
 data class RequestForVotes(override val src: Address, override val dest: Address, override val content: String) : Message(src, dest, content)
 data class VoteFromFollower(override val src: Address, override val dest: Address, override val content: String) : Message(src, dest, content)
 data class Heartbeat(override val src: Address, override val dest: Address, override val content: String) : Message(src, dest, content)

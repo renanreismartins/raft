@@ -10,6 +10,16 @@ data class Follower(
     override val config: Config = Config(),
 ): Node(address, name, state, network, peers, messages) {
 
+
+    fun process(message: Message) {
+        val state = 0
+        when(message) {
+            is Heartbeat -> ((state + message.content.toInt()) to emptyList<Message>())
+            is RequestForVotes -> (state to listOf(VoteFromFollower(address, message.src, "Future content here"))) //TODO add the message here instead of calling 'send'
+            is VoteFromFollower -> (state to emptyList<Message>()) //TODO add the message here instead of calling 'send'; this should never happen, decide how to handle
+        }
+    }
+
     override fun tick(): Node {
         val tickMessages = network.get(this.address)
 
@@ -20,7 +30,7 @@ data class Follower(
                 println("RECEIVED $msg")
 
                 if ("REQUEST FOR VOTES" == msg.content) {
-                    send(msg.src, "VOTE FROM FOLLOWER")
+                    send(msg.src, "VOTE FROM FOLLOWER") //TODO REMOVE THIS SIDE EFFECT
                 }
 
                 acc
