@@ -1,6 +1,7 @@
 import org.example.Address
 import org.example.Candidate
 import org.example.Follower
+import org.example.Heartbeat
 import org.example.Network
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -18,7 +19,7 @@ class NodeTests {
         val nodeA = Follower(Address("127.0.0.1", 9001), "NodeA", network = network, peers = listOf(nodeBAddress))
 
         // When
-        nodeA.send(nodeB.address, "1")
+        nodeA.send(Heartbeat(nodeA.address, nodeB.address, "1"))
         network.tick()
         val newNodeB = nodeB.tick()
 

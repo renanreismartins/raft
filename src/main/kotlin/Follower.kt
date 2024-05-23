@@ -30,7 +30,7 @@ data class Follower(
                 println("RECEIVED $msg")
 
                 if ("REQUEST FOR VOTES" == msg.content) {
-                    send(msg.src, "VOTE FROM FOLLOWER") //TODO REMOVE THIS SIDE EFFECT
+                    send(VoteFromFollower(address, msg.src, "VOTE FROM FOLLOWER")) //TODO REMOVE THIS SIDE EFFECT
                 }
 
                 acc
@@ -42,7 +42,7 @@ data class Follower(
         if (messageLog.isEmpty() && network.clock > config.electionTimeout) {
             val candidate = Candidate(address, name, state, network, peers, messageLog)
 
-            peers.forEach { peer -> candidate.send(peer, "REQUEST FOR VOTES") } // TODO Refactor to return the messages to be sent instead of a side effect
+            peers.forEach { peer -> candidate.send(RequestForVotes(this.address, peer, "REQUEST FOR VOTES")) } // TODO Refactor to return the messages to be sent instead of a side effect
 
             return candidate
         }
