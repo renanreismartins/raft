@@ -10,21 +10,19 @@ data class Follower(
     override val config: Config = Config(),
 ): Node(address, name, state, network, peers, messages) {
 
-
-    fun process(message: Message): Pair<Int, List<Message>> {
-        val state = 0
+    private fun process(state: Int, messages: List<Message>, message: Message): Pair<Int, List<Message>> {
         return when(message) {
-            is Heartbeat -> ((state + message.content.toInt()) to emptyList<Message>())
-            is RequestForVotes -> (state to listOf(VoteFromFollower(address, message.src, "VOTE FROM FOLLOWER"))) //TODO add the message here instead of calling 'send'
-            is VoteFromFollower -> (state to emptyList<Message>()) //TODO add the message here instead of calling 'send'; this should never happen, decide how to handle
+            is Heartbeat -> ((state + message.content.toInt()) to messages)
+            is RequestForVotes -> (state to messages + VoteFromFollower(address, message.src, "VOTE FROM FOLLOWER"))
+            is VoteFromFollower -> (state to messages)
         }
     }
 
     override fun tick(): Node {
         val tickMessages = network.get(this.address)
 
-        val (newState, messagesToSend) = tickMessages.fold(state to emptyList<Message>()) { acc, msg ->
-            process(msg)
+        val (newState, messagesToSend) = tickMessages.fold(state to emptyList<Message>()) { (s, messages), msg ->
+            process(s, messages, msg)
         }
 
         messagesToSend.forEach { send(it) } // TODO remove side effect
