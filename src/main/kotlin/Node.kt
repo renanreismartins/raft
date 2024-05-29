@@ -3,7 +3,7 @@ package org.example
 // TODO: Figure out a good type for this when we start cleaning
 data class Config(val electionTimeout: Int = 3)
 
-typealias ReceivedAt = Int
+typealias ReceivedAt = Int //TODO Make this a Comparable, so when we change it to a 'Date' type for the real world, we do not need to change the usages
 typealias MessageLogEntry = Pair<ReceivedAt, Message>
 
 data class Address(val host: String, val port: Int)
