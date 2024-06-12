@@ -1,6 +1,7 @@
 package org.example
 
-data class TimeMachine(val network: Network, val nodeA: Node, val nodeB: Node) {
+// TODO Make this take vararg of Nodes
+data class TimeMachine(val network: Network, val nodeA: Node, val nodeB: Node, val nodeC: Node? = null) {
     /**
      * The Network must come first, as the Nodes rely on its clock when they tick
      * E.g. NodeA sends to NodeB on tick 0, the earliest this message will arrive
@@ -12,7 +13,8 @@ data class TimeMachine(val network: Network, val nodeA: Node, val nodeB: Node) {
         return this.copy(
             network = network.tick(),
             nodeA = nodeA.tick(),
-            nodeB = nodeB.tick()
+            nodeB = nodeB.tick(),
+            nodeC = nodeC?.tick()
         )
     }
 

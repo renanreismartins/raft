@@ -4,7 +4,7 @@ package org.example
 data class Config(val electionTimeout: Int = 3)
 
 typealias ReceivedAt = Int //TODO Make this a Comparable, so when we change it to a 'Date' type for the real world, we do not need to change the usages
-typealias MessageLogEntry = Pair<ReceivedAt, Message>
+typealias MessageLogEntry = Pair<ReceivedAt, Message> // TODO Make a real class with named props
 
 data class Address(val host: String, val port: Int)
 
@@ -14,6 +14,9 @@ sealed class Message(open val src: Address, open val dest: Address, open val con
 data class RequestForVotes(override val src: Address, override val dest: Address, override val content: String) : Message(src, dest, content)
 data class VoteFromFollower(override val src: Address, override val dest: Address, override val content: String) : Message(src, dest, content)
 data class Heartbeat(override val src: Address, override val dest: Address, override val content: String) : Message(src, dest, content)
+// TODO We need to make these generic, and AppendEntries content should be List<T> - find a way to do this with generics, or remove the parent content
+//data class AppendEntries(override val src: Address, override val dest: Address, override val content: String) : Message(src, dest, content)
+
 
 abstract class Node(
     open val address: Address,

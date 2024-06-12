@@ -31,7 +31,11 @@ data class Candidate(
         val messageLog = messages + tickMessages.map { network.clock to it }
 
         if (shouldBecomeLeader(messageLog)) {
-            //TODO
+            // TODO Create constructors for each Node type that takes a Node so we don't need to pass all of these params every time
+            val leader = Leader(address, name, newState, network, peers, messageLog, config)
+            // TODO Refactor to return the messages to be sent instead of a side effect
+            peers.forEach { peer -> leader.send(Heartbeat( leader.address, peer, "I (${leader.name}) AM YOUR LEADER NOW")) }
+            return leader
         }
 
         return this.copy(state = newState, messages = messageLog)
