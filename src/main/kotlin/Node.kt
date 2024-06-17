@@ -24,7 +24,8 @@ abstract class Node(
     open val state: Int,
     open val network: Network,
     open val peers: List<Address>,
-    open val messages: List<MessageLogEntry> = emptyList(),
+    open val received: List<MessageLogEntry> = emptyList(),
+    open val sent: List<MessageLogEntry> = emptyList(), //TODO create a different type for sent and received
     open val config: Config = Config(),
 ) {
     fun tick(ticks: Int): Node {

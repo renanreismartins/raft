@@ -33,12 +33,12 @@ class ElectionTest {
         // Then Candidate got promoted and sent its Request for Votes to the Follower
         assertTrue(becameCandidate is Candidate)
         assertTrue(remainedFollower is Follower)
-        assertEquals("REQUEST FOR VOTES", remainedFollower.messages.first().second.content)
+        assertEquals("REQUEST FOR VOTES", remainedFollower.received.first().second.content)
 
         val (_, leaderWithVote, _)= timeMachine.tick()
 
         assertTrue(leaderWithVote is Leader)
-        assertEquals("VOTE FROM FOLLOWER", leaderWithVote.messages.first().second.content)
+        assertEquals("VOTE FROM FOLLOWER", leaderWithVote.received.first().second.content)
     }
 
     @Test
@@ -63,18 +63,18 @@ class ElectionTest {
         assertTrue(candidateWillLose is Candidate)
         assertTrue(follower is Follower)
 
-        val firstRequestForVotes = follower.messages.first().second
-        assertTrue(firstRequestForVotes is RequestForVotes)
-        assertEquals(willBecomeLeaderAddress, firstRequestForVotes.src)
+        val futureWinnerRequestForVotes = follower.received.first().second
+        assertTrue(futureWinnerRequestForVotes is RequestForVotes)
+        assertEquals(willBecomeLeaderAddress, futureWinnerRequestForVotes.src)
 
-        val secondRequestForVotes = follower.messages[1].second
-        assertTrue(secondRequestForVotes is RequestForVotes)
-        assertEquals(willLoseElectionAddress, secondRequestForVotes.src)
+        val futureLoserRequestForVotes = follower.received[1].second
+        assertTrue(futureLoserRequestForVotes is RequestForVotes)
+        assertEquals(willLoseElectionAddress, futureLoserRequestForVotes.src)
 
-        val (_, leader, demotedToFollower, _)= timeMachine.tick()
+        val (_, leader, demotedToFollower, _) = timeMachine.tick()
 
         assertTrue(leader is Leader)
-        assertTrue(leader.messages.last().second is VoteFromFollower)
+        assertTrue(leader.received.last().second is VoteFromFollower)
 
         // TODO: demotedToFollower is being promoted to Leader because the follower is sending multiple votes.
         assertTrue(demotedToFollower is Follower)

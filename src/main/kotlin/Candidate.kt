@@ -6,9 +6,10 @@ data class Candidate(
     override val state: Int = 0,
     override val network: Network,
     override val peers: List<Address>,
-    override val messages: List<MessageLogEntry> = emptyList(),
+    override val received: List<MessageLogEntry> = emptyList(),
+    override val sent: List<MessageLogEntry> = emptyList(),
     override val config: Config = Config(),
-): Node(address, name, state, network, peers, messages) {
+): Node(address, name, state, network, peers, received) {
 
     private fun process(state: Int, messages: List<Message>, message: Message): Pair<Int, List<Message>> {
         return when(message) {
@@ -28,17 +29,17 @@ data class Candidate(
 
         messagesToSend.forEach { send(it) } // TODO remove side effect
 
-        val messageLog = messages + tickMessages.map { network.clock to it }
+        val messageLog = received + tickMessages.map { network.clock to it }
 
         if (shouldBecomeLeader(messageLog)) {
             // TODO Create constructors for each Node type that takes a Node so we don't need to pass all of these params every time
-            val leader = Leader(address, name, newState, network, peers, messageLog, config)
+            val leader = Leader(address, name, newState, network, peers, messageLog, sent + messagesToSend.map { network.clock to it }, config)
             // TODO Refactor to return the messages to be sent instead of a side effect
             peers.forEach { peer -> leader.send(Heartbeat( leader.address, peer, "I (${leader.name}) AM YOUR LEADER NOW")) }
             return leader
         }
 
-        return this.copy(state = newState, messages = messageLog)
+        return this.copy(state = newState, received = messageLog, sent = sent + messagesToSend.map { network.clock to it })
     }
 
     fun shouldBecomeLeader(messageLog: List<MessageLogEntry>): Boolean {
