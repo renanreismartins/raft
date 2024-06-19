@@ -11,10 +11,13 @@ data class Candidate(
     override val config: Config = Config(),
 ): Node(address, name, state, network, peers, received) {
 
+    // TODO Make process return Node, so we have finer control over how we handle each message
+    //      e.g. If a Candidate receives a Heartbeat, it should demote to follower, this is difficult
+    //      with the current architecture. This would lead allow us to remove methods to demote/promote
     private fun process(state: Int, messages: List<Message>, message: Message): Pair<Int, List<Message>> {
         return when(message) {
             is Heartbeat -> ((state + message.content.toInt()) to messages)
-            is RequestForVotes -> (state to messages + VoteFromFollower(address, message.src, "VOTE FROM FOLLOWER"))
+            is RequestForVotes -> (state to messages)
             is VoteFromFollower -> (state to messages)
         }
     }
@@ -31,11 +34,17 @@ data class Candidate(
 
         val messageLog = received + tickMessages.map { network.clock to it }
 
+        if (shouldDemoteToFollower(tickMessages)) {
+            return Follower(
+                address, name, newState, network, peers, messageLog, sent + messagesToSend.map { network.clock to it }, config
+            )
+        }
+
         if (shouldBecomeLeader(messageLog)) {
             // TODO Create constructors for each Node type that takes a Node so we don't need to pass all of these params every time
             val leader = Leader(address, name, newState, network, peers, messageLog, sent + messagesToSend.map { network.clock to it }, config)
             // TODO Refactor to return the messages to be sent instead of a side effect
-            peers.forEach { peer -> leader.send(Heartbeat( leader.address, peer, "I (${leader.name}) AM YOUR LEADER NOW")) }
+            peers.forEach { peer -> leader.send(Heartbeat( leader.address, peer, "0")) }
             return leader
         }
 
@@ -45,6 +54,12 @@ data class Candidate(
     fun shouldBecomeLeader(messageLog: List<MessageLogEntry>): Boolean {
         //TODO + 1 represents the Vote for Self, do we want to add it to the MessageLogEntry and remove it from here
         return messageLog.count { m -> m.second is VoteFromFollower } + 1 > clusterSize() / 2
+    }
+
+    // TODO We need to make sure that this Heartbeat comes from the real Leader (check term index?)
+    //      and we aren't receiving Heartbeats from any other source
+    private fun shouldDemoteToFollower(tickMessages: List<Message>): Boolean {
+        return tickMessages.any { it is Heartbeat }
     }
 
     private fun clusterSize(): Int  {

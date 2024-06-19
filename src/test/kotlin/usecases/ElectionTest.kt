@@ -4,6 +4,7 @@ import org.example.Address
 import org.example.Candidate
 import org.example.Config
 import org.example.Follower
+import org.example.Heartbeat
 import org.example.Leader
 import org.example.Network
 import org.example.RequestForVotes
@@ -11,6 +12,7 @@ import org.example.TimeMachine
 import org.example.VoteFromFollower
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class ElectionTest {
@@ -71,16 +73,19 @@ class ElectionTest {
         assertTrue(futureLoserRequestForVotes is RequestForVotes)
         assertEquals(willLoseElectionAddress, futureLoserRequestForVotes.src)
 
-        val (_, leader, demotedToFollower, _) = timeMachine.tick()
+        val (_, leader, candidateToBeDemoted, _) = timeMachine.tick()
 
-        assertTrue(leader is Leader)
+        // New leader is decided, other candidate will be demoted when it receives Heartbeat on the next tick
+        assertIs<Leader>(leader)
         assertTrue(leader.received.last().second is VoteFromFollower)
-
-        // TODO: demotedToFollower is being promoted to Leader because the follower is sending multiple votes.
-        assertTrue(demotedToFollower is Follower)
-
+        assertIs<Candidate>(candidateToBeDemoted)
 
         // TODO check that non-Leaders receive the Heartbeat from new Leader
+        val (_, _, follower1, follower2) = timeMachine.tick()
+        // Candidate has been demoted to Follower
+        assertIs<Follower>(follower1)
+        assertEquals(Heartbeat(willBecomeLeaderAddress, follower1.address, "0"), follower1.received.last().second)
+        assertEquals(Heartbeat(willBecomeLeaderAddress, follower2.address, "0"), follower2.received.last().second)
     }
 
 }

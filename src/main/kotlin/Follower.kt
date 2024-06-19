@@ -31,6 +31,8 @@ data class Follower(
         val messageLog = received + tickMessages.map { network.clock to it }
 
         if (shouldPromote(messageLog)) {
+            // TODO Move this to a Candidate constructor that takes a Follower
+            //      Also, when creating a candidate, add a 'VoteFromFollower' from self to received messageLog
             val candidate = Candidate(address, name, state, network, peers, messageLog, sent = sent + messagesToSend.map { network.clock to it })
             peers.forEach { peer -> candidate.send(RequestForVotes(this.address, peer, "REQUEST FOR VOTES")) } // TODO Refactor to return the messages to be sent instead of a side effect
             return candidate
