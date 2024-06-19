@@ -34,7 +34,7 @@ data class Candidate(
 
         val messageLog = received + tickMessages.map { network.clock to it }
 
-        if (shouldDemoteToFollower(tickMessages)) {
+        if (shouldDemoteToFollower(messageLog)) {
             return Follower(
                 address, name, newState, network, peers, messageLog, sent + messagesToSend.map { network.clock to it }, config
             )
@@ -58,8 +58,8 @@ data class Candidate(
 
     // TODO We need to make sure that this Heartbeat comes from the real Leader (check term index?)
     //      and we aren't receiving Heartbeats from any other source
-    private fun shouldDemoteToFollower(tickMessages: List<Message>): Boolean {
-        return tickMessages.any { it is Heartbeat }
+    private fun shouldDemoteToFollower(messageLog: List<MessageLogEntry>): Boolean {
+        return messageLog.any { it.second is Heartbeat }
     }
 
     private fun clusterSize(): Int  {
