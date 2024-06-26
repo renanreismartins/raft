@@ -1,11 +1,11 @@
 package org.example
 
 data class Follower(
-    override val address: Address,
+    override val address: Source,
     override val name: String,
     override val state: Int = 0,
     override val network: Network,
-    override val peers: List<Address>,
+    override val peers: List<Destination>,
     override val received: List<MessageLogEntry> = emptyList(),
     override val sent: List<MessageLogEntry> = emptyList(),
     override val config: Config = Config(),
@@ -14,7 +14,7 @@ data class Follower(
     private fun process(state: Int, messages: List<Message>, message: Message): Pair<Int, List<Message>> {
         return when(message) {
             is Heartbeat -> ((state + message.content.toInt()) to messages)
-            is RequestForVotes -> (state to (if (shouldVote(messages)) messages + VoteFromFollower(address, message.src, "VOTE FROM FOLLOWER") else messages))
+            is RequestForVotes -> (state to (if (shouldVote(messages)) messages + VoteFromFollower(address, Destination.from(message.src), "VOTE FROM FOLLOWER") else messages))
             is VoteFromFollower -> (state to messages)
         }
     }

@@ -1,8 +1,10 @@
 import org.example.Address
 import org.example.Candidate
+import org.example.Destination
 import org.example.Follower
 import org.example.Heartbeat
 import org.example.Network
+import org.example.Source
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -13,13 +15,13 @@ class NodeTests {
         // Given
         val network = Network()
 
-        val nodeBAddress = Address("127.0.0.1", 9002)
+        val nodeBAddress = Source("127.0.0.1", 9002)
         val nodeB = Follower(nodeBAddress, "NodeB", network = network, peers = emptyList())
 
-        val nodeA = Follower(Address("127.0.0.1", 9001), "NodeA", network = network, peers = listOf(nodeBAddress))
+        val nodeA = Follower(Source("127.0.0.1", 9001), "NodeA", network = network, peers = listOf(Destination.from(nodeBAddress)))
 
         // When
-        nodeA.send(Heartbeat(nodeA.address, nodeB.address, "1"))
+        nodeA.send(Heartbeat(nodeA.address, Destination.from(nodeB.address), "1"))
         network.tick()
         val newNodeB = nodeB.tick()
 
@@ -31,7 +33,7 @@ class NodeTests {
     fun `Follower becomes a Candidate if it does not receive a heartbeat before the election timeout (3 ticks)`() {
         // Given
         val network = Network()
-        val follower = Follower(Address("127.0.0.1", 9001), "NodeA", network = network, peers = emptyList())
+        val follower = Follower(Source("127.0.0.1", 9001), "NodeA", network = network, peers = emptyList())
 
         // When
         network.tick()
@@ -54,8 +56,8 @@ class NodeTests {
     fun `A Request for Votes is sent when a Follower Becomes a Candidate (timeout 3 ticks)`() {
         // Given
         val network = Network()
-        val destination = Address("127.0.0.1", 9002)
-        val follower = Follower(Address("127.0.0.1", 9001), "NodeA", network = network, peers = listOf(destination))
+        val destination = Destination("127.0.0.1", 9002)
+        val follower = Follower(Source("127.0.0.1", 9001), "NodeA", network = network, peers = listOf(destination))
 
         // When
         network.tick()

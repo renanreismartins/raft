@@ -3,11 +3,13 @@ package usecases
 import org.example.Address
 import org.example.Candidate
 import org.example.Config
+import org.example.Destination
 import org.example.Follower
 import org.example.Heartbeat
 import org.example.Leader
 import org.example.Network
 import org.example.RequestForVotes
+import org.example.Source
 import org.example.TimeMachine
 import org.example.VoteFromFollower
 import org.junit.jupiter.api.Test
@@ -22,11 +24,11 @@ class ElectionTest {
         // Given
         val network = Network()
 
-        val willPromoteAddress = Address("127.0.0.1", 9001)
-        val remainsFollowerAddress = Address("127.0.0.1", 9002)
+        val willPromoteAddress = Source("127.0.0.1", 9001)
+        val remainsFollowerAddress = Source("127.0.0.1", 9002)
 
-        val willPromote = Follower(willPromoteAddress, "NodeA", network = network, peers = listOf(remainsFollowerAddress), config = Config(3))
-        val remainsFollower = Follower(remainsFollowerAddress, "NodeA", network = network, peers = listOf(remainsFollowerAddress), config = Config(10))
+        val willPromote = Follower(willPromoteAddress, "NodeA", network = network, peers = listOf(Destination.from(remainsFollowerAddress)), config = Config(3))
+        val remainsFollower = Follower(remainsFollowerAddress, "NodeA", network = network, peers = Destination.from(listOf(remainsFollowerAddress)), config = Config(10))
 
         // When
         val timeMachine = TimeMachine(network, willPromote, remainsFollower).tick(4)
@@ -48,13 +50,14 @@ class ElectionTest {
         // Given
         val network = Network()
 
-        val willBecomeLeaderAddress = Address("127.0.0.1", 9001)
-        val willLoseElectionAddress = Address("127.0.0.1", 9002)
-        val remainsFollowerAddress = Address("127.0.0.1", 9003)
+        val willBecomeLeaderAddress = Source("127.0.0.1", 9001)
+        val willLoseElectionAddress = Source("127.0.0.1", 9002)
+        val remainsFollowerAddress = Source("127.0.0.1", 9003)
 
-        val willBecomeLeader = Follower(willBecomeLeaderAddress, "NodeA", network = network, peers = listOf(willLoseElectionAddress, remainsFollowerAddress), config = Config(3))
-        val willLoseElection = Follower(willLoseElectionAddress, "NodeB", network = network, peers = listOf(willBecomeLeaderAddress, remainsFollowerAddress), config = Config(3))
-        val remainsFollower = Follower(remainsFollowerAddress, "NodeC", network = network, peers = listOf(willBecomeLeaderAddress, willLoseElectionAddress), config = Config(10))
+
+        val willBecomeLeader = Follower(willBecomeLeaderAddress, "NodeA", network = network, peers = Destination.from(listOf(willLoseElectionAddress, remainsFollowerAddress)), config = Config(3))
+        val willLoseElection = Follower(willLoseElectionAddress, "NodeB", network = network, peers = Destination.from(listOf(willBecomeLeaderAddress, remainsFollowerAddress)), config = Config(3))
+        val remainsFollower = Follower(remainsFollowerAddress, "NodeC", network = network, peers = Destination.from(listOf(willBecomeLeaderAddress, willLoseElectionAddress)), config = Config(10))
 
         // When
         val timeMachine = TimeMachine(network, willBecomeLeader, willLoseElection, remainsFollower).tick(4)
@@ -84,8 +87,8 @@ class ElectionTest {
         val (_, _, follower1, follower2) = timeMachine.tick()
         // Candidate has been demoted to Follower
         assertIs<Follower>(follower1)
-        assertEquals(Heartbeat(willBecomeLeaderAddress, follower1.address, "0"), follower1.received.last().second)
-        assertEquals(Heartbeat(willBecomeLeaderAddress, follower2.address, "0"), follower2.received.last().second)
+        assertEquals(Heartbeat(willBecomeLeaderAddress, Destination.from(follower1.address), "0"), follower1.received.last().second)
+        assertEquals(Heartbeat(willBecomeLeaderAddress, Destination.from(follower2.address), "0"), follower2.received.last().second)
     }
 
 }
