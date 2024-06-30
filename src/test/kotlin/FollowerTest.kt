@@ -22,7 +22,6 @@ class FollowerTest {
         val timeMachine = TimeMachine(network, Follower(Source("host", 1), "follower", 0, network, emptyList(), emptyList()))
         val (_, follower) = timeMachine.tick()
 
-        //TODO COULD BE THAT THE ADDRESSES ARE WRONG
         assertEquals(listOf((1 to VoteFromFollower(Source("host", 1), Destination("host", 2), "VOTE FROM FOLLOWER"))), follower.sent)
     }
 }
