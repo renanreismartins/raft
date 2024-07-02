@@ -1,5 +1,9 @@
 package org.example
 
+
+//TODO maybe we should make all the constructors except the Followe as private
+// this way all nodes can only be initialized as Follower and only transition to a new
+// state thought the state machine
 data class Leader(
     override val address: Source,
     override val name: String,
@@ -17,5 +21,4 @@ data class Leader(
     override fun receive(message: Message): Node {
         TODO("Not yet implemented")
     }
-
 }

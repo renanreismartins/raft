@@ -33,22 +33,20 @@ data class Candidate(
         messagesToSend.forEach { send(it) } // TODO remove side effect
 
         val messageLog = received + tickMessages.map { network.clock to it }
+        val newSent = sent + messagesToSend.map { network.clock to it }
 
         if (shouldDemoteToFollower(messageLog)) {
-            return Follower(
-                address, name, newState, network, peers, messageLog, sent + messagesToSend.map { network.clock to it }, config
-            )
+            return demote(newState, messageLog, newSent)
         }
 
         if (shouldBecomeLeader(messageLog)) {
-            // TODO Create constructors for each Node type that takes a Node so we don't need to pass all of these params every time
-            val leader = Leader(address, name, newState, network, peers, messageLog, sent + messagesToSend.map { network.clock to it }, config)
+            val leader = promote(newState, messageLog, newSent)
             // TODO Refactor to return the messages to be sent instead of a side effect
             peers.forEach { peer -> leader.send(Heartbeat( leader.address, peer, "0")) }
             return leader
         }
 
-        return this.copy(state = newState, received = messageLog, sent = sent + messagesToSend.map { network.clock to it })
+        return this.copy(state = newState, received = messageLog, sent = newSent)
     }
 
     fun shouldBecomeLeader(messageLog: List<MessageLogEntry>): Boolean {
@@ -71,4 +69,11 @@ data class Candidate(
         TODO("Not yet implemented")
     }
 
+    private fun promote(newState: Int, newReceived: List<MessageLogEntry>, newSent: List<MessageLogEntry>): Leader {
+        return Leader(this.address, this.name, newState, this.network, this.peers, newReceived, newSent, this.config)
+    }
+
+    private fun demote(newState: Int, newReceived: List<MessageLogEntry>, newSent: List<MessageLogEntry>): Follower {
+        return Follower(this.address, this.name, newState, this.network, this.peers, newReceived, newSent, this.config)
+    }
 }
