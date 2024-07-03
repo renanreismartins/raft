@@ -2,6 +2,7 @@ import org.example.Address
 import org.example.Candidate
 import org.example.Destination
 import org.example.Network
+import org.example.ReceivedMessage
 import org.example.Source
 import org.example.VoteFromFollower
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -21,8 +22,8 @@ class CandidateTest {
         val candidate = candidate()
 
         val messageLog = listOf(
-            0 to VoteFromFollower(Source("host1", 1), Destination("host0", 1), "Vote"),
-            0 to VoteFromFollower(Source("host2", 1), Destination("host0", 1), "Vote")
+            ReceivedMessage(VoteFromFollower(Source("host1", 1), Destination("host0", 1), "Vote"), 0),
+            ReceivedMessage(VoteFromFollower(Source("host2", 1), Destination("host0", 1), "Vote"), 0),
         )
         assertTrue(candidate.shouldBecomeLeader(messageLog))
     }

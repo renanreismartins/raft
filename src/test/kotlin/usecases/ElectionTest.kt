@@ -1,6 +1,5 @@
 package usecases
 
-import org.example.Address
 import org.example.Candidate
 import org.example.Config
 import org.example.Destination
@@ -37,12 +36,12 @@ class ElectionTest {
         // Then Candidate got promoted and sent its Request for Votes to the Follower
         assertTrue(becameCandidate is Candidate)
         assertTrue(remainedFollower is Follower)
-        assertEquals("REQUEST FOR VOTES", remainedFollower.received.first().second.content)
+        assertEquals("REQUEST FOR VOTES", remainedFollower.received.first().message.content)
 
         val (_, leaderWithVote, _)= timeMachine.tick()
 
         assertTrue(leaderWithVote is Leader)
-        assertEquals("VOTE FROM FOLLOWER", leaderWithVote.received.first().second.content)
+        assertEquals("VOTE FROM FOLLOWER", leaderWithVote.received.first().message.content)
     }
 
     @Test
@@ -68,11 +67,11 @@ class ElectionTest {
         assertTrue(candidateWillLose is Candidate)
         assertTrue(follower is Follower)
 
-        val futureWinnerRequestForVotes = follower.received.first().second
+        val futureWinnerRequestForVotes = follower.received.first().message
         assertTrue(futureWinnerRequestForVotes is RequestForVotes)
         assertEquals(willBecomeLeaderAddress, futureWinnerRequestForVotes.src)
 
-        val futureLoserRequestForVotes = follower.received[1].second
+        val futureLoserRequestForVotes = follower.received[1].message
         assertTrue(futureLoserRequestForVotes is RequestForVotes)
         assertEquals(willLoseElectionAddress, futureLoserRequestForVotes.src)
 
@@ -80,15 +79,15 @@ class ElectionTest {
 
         // New leader is decided, other candidate will be demoted when it receives Heartbeat on the next tick
         assertIs<Leader>(leader)
-        assertTrue(leader.received.last().second is VoteFromFollower)
+        assertTrue(leader.received.last().message is VoteFromFollower)
         assertIs<Candidate>(candidateToBeDemoted)
 
         // TODO check that non-Leaders receive the Heartbeat from new Leader
         val (_, _, follower1, follower2) = timeMachine.tick()
         // Candidate has been demoted to Follower
         assertIs<Follower>(follower1)
-        assertEquals(Heartbeat(willBecomeLeaderAddress, Destination.from(follower1.address), "0"), follower1.received.last().second)
-        assertEquals(Heartbeat(willBecomeLeaderAddress, Destination.from(follower2.address), "0"), follower2.received.last().second)
+        assertEquals(Heartbeat(willBecomeLeaderAddress, Destination.from(follower1.address), "0"), follower1.received.last().message)
+        assertEquals(Heartbeat(willBecomeLeaderAddress, Destination.from(follower2.address), "0"), follower2.received.last().message)
     }
 
 }

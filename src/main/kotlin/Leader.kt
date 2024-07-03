@@ -10,8 +10,8 @@ data class Leader(
     override val state: Int = 0,
     override val network: Network,
     override val peers: List<Destination>,
-    override val received: List<MessageLogEntry> = emptyList(),
-    override val sent: List<MessageLogEntry> = emptyList(),
+    override val received: List<ReceivedMessage> = emptyList(),
+    override val sent: List<SentMessage> = emptyList(),
     override val config: Config = Config(),
 ): Node(address, name, state, network, peers, received) {
     override fun tick(): Node {
