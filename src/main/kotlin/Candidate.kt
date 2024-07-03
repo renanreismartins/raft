@@ -6,8 +6,8 @@ data class Candidate(
     override val state: Int = 0,
     override val network: Network,
     override val peers: List<Destination>,
-    override val received: List<MessageLogEntry> = emptyList(),
-    override val sent: List<MessageLogEntry> = emptyList(),
+    override val received: List<ReceivedMessage> = emptyList(),
+    override val sent: List<SentMessage> = emptyList(),
     override val config: Config = Config(),
 ): Node(address, name, state, network, peers, received) {
 
@@ -32,8 +32,8 @@ data class Candidate(
 
         messagesToSend.forEach { send(it) } // TODO remove side effect
 
-        val messageLog = received + tickMessages.map { network.clock to it }
-        val newSent = sent + messagesToSend.map { network.clock to it }
+        val messageLog = received + tickMessages.map { ReceivedMessage(it, network.clock) }
+        val newSent = sent + messagesToSend.map { SentMessage(it, network.clock)}
 
         if (shouldDemoteToFollower(messageLog)) {
             return demote(newState, messageLog, newSent)
@@ -49,15 +49,15 @@ data class Candidate(
         return this.copy(state = newState, received = messageLog, sent = newSent)
     }
 
-    fun shouldBecomeLeader(messageLog: List<MessageLogEntry>): Boolean {
+    fun shouldBecomeLeader(messageLog: List<ReceivedMessage>): Boolean {
         //TODO + 1 represents the Vote for Self, do we want to add it to the MessageLogEntry and remove it from here
-        return messageLog.count { m -> m.second is VoteFromFollower } + 1 > clusterSize() / 2
+        return messageLog.count { m -> m.message is VoteFromFollower } + 1 > clusterSize() / 2
     }
 
     // TODO We need to make sure that this Heartbeat comes from the real Leader (check term index?)
     //      and we aren't receiving Heartbeats from any other source
-    private fun shouldDemoteToFollower(messageLog: List<MessageLogEntry>): Boolean {
-        return messageLog.any { it.second is Heartbeat }
+    private fun shouldDemoteToFollower(messageLog: List<ReceivedMessage>): Boolean {
+        return messageLog.any { it.message is Heartbeat }
     }
 
     private fun clusterSize(): Int  {
@@ -69,11 +69,11 @@ data class Candidate(
         TODO("Not yet implemented")
     }
 
-    private fun promote(newState: Int, newReceived: List<MessageLogEntry>, newSent: List<MessageLogEntry>): Leader {
+    private fun promote(newState: Int, newReceived: List<ReceivedMessage>, newSent: List<SentMessage>): Leader {
         return Leader(this.address, this.name, newState, this.network, this.peers, newReceived, newSent, this.config)
     }
 
-    private fun demote(newState: Int, newReceived: List<MessageLogEntry>, newSent: List<MessageLogEntry>): Follower {
+    private fun demote(newState: Int, newReceived: List<ReceivedMessage>, newSent: List<SentMessage>): Follower {
         return Follower(this.address, this.name, newState, this.network, this.peers, newReceived, newSent, this.config)
     }
 }

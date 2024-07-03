@@ -1,9 +1,9 @@
-import org.example.Address
 import org.example.Destination
 import org.example.Follower
 import org.example.Network
 import org.example.NetworkMessage
 import org.example.RequestForVotes
+import org.example.SentMessage
 import org.example.Source
 import org.example.TimeMachine
 import org.example.VoteFromFollower
@@ -22,6 +22,6 @@ class FollowerTest {
         val timeMachine = TimeMachine(network, Follower(Source("host", 1), "follower", 0, network, emptyList(), emptyList()))
         val (_, follower) = timeMachine.tick()
 
-        assertEquals(listOf((1 to VoteFromFollower(Source("host", 1), Destination("host", 2), "VOTE FROM FOLLOWER"))), follower.sent)
+        assertEquals(listOf(SentMessage(VoteFromFollower(Source("host", 1), Destination("host", 2), "VOTE FROM FOLLOWER"), 1)), follower.sent)
     }
 }

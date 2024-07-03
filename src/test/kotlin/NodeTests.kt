@@ -1,4 +1,3 @@
-import org.example.Address
 import org.example.Candidate
 import org.example.Destination
 import org.example.Follower

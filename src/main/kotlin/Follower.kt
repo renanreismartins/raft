@@ -6,9 +6,8 @@ data class Follower(
     override val state: Int = 0,
     override val network: Network,
     override val peers: List<Destination>,
-    //TODO Encapsulate collections "Received" and "Sent"
-    override val received: List<MessageLogEntry> = emptyList(),
-    override val sent: List<MessageLogEntry> = emptyList(),
+    override val received: List<ReceivedMessage> = emptyList(),
+    override val sent: List<SentMessage> = emptyList(),
     override val config: Config = Config(),
 ): Node(address, name, state, network, peers, received) {
 
@@ -29,8 +28,8 @@ data class Follower(
 
         messagesToSend.forEach { send(it) } // TODO remove side effect
 
-        val messageLog = received + tickMessages.map { network.clock to it }
-        val newSent = sent + messagesToSend.map { network.clock to it }
+        val messageLog = received + tickMessages.map { ReceivedMessage(it, network.clock) }
+        val newSent = sent + messagesToSend.map { SentMessage(it, network.clock) }
 
         if (shouldPromote(messageLog)) {
             // TODO when creating a candidate (promoting a follower), add a 'VoteFromFollower' from self to received messageLogMove this to a Candidate constructor that takes a Follower
@@ -43,11 +42,11 @@ data class Follower(
     }
 
     //TODO UNIT TEST
-    private fun shouldPromote(messageLog: List<MessageLogEntry>): Boolean {
+    private fun shouldPromote(messageLog: List<ReceivedMessage>): Boolean {
         // On system startup, Follower hasn't received any messages and should promote itself after electionTimeout
         val hasReachedFirstTimeoutAfterStartup = messageLog.isEmpty() && network.clock > config.electionTimeout
         // During normal operation of the system, has not received messages in electionTimeout period
-        val hasReachedTimeoutWithLastMessage = messageLog.isNotEmpty() && network.clock - messageLog.last().first > config.electionTimeout
+        val hasReachedTimeoutWithLastMessage = messageLog.isNotEmpty() && network.clock - messageLog.last().receivedAt > config.electionTimeout
         return hasReachedTimeoutWithLastMessage || hasReachedFirstTimeoutAfterStartup
     }
 
@@ -60,7 +59,7 @@ data class Follower(
         return (sent + tickMessages).filterIsInstance<VoteFromFollower>().isEmpty()
     }
 
-    private fun promote(newReceived: List<MessageLogEntry>, newSent: List<MessageLogEntry>): Candidate {
+    private fun promote(newReceived: List<ReceivedMessage>, newSent: List<SentMessage>): Candidate {
         return Candidate(this.address, this.name, this.state, this.network, this.peers, newReceived, newSent)
     }
 }
