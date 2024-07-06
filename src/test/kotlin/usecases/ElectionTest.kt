@@ -45,7 +45,7 @@ class ElectionTest {
     }
 
     @Test
-    fun `With 3 nodes, where 2 will promote to Candidate at the same tick, only will receive a vote from the remaining Follower (and promote) the other will revert to Follower`() {
+    fun `With 3 nodes, where 2 will promote to Candidate at the same tick, only one will receive a vote from the remaining Follower (and promote) the other will revert to Follower`() {
         // Given
         val network = Network()
 

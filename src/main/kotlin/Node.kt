@@ -1,7 +1,7 @@
 package org.example
 
 // TODO: Figure out a good type for this when we start cleaning
-data class Config(val electionTimeout: Int = 3)
+data class Config(val electionTimeout: Int = 5, val heartbeatTimeout: Int = 2)
 
 sealed class Address(open val host: String, open val port: Int)
 data class Source(override val host: String, override val port: Int) : Address(host, port) {
