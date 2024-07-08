@@ -11,12 +11,14 @@ data class Follower(
     override val config: Config = Config(),
 ): Node(address, name, state, network, peers, received) {
 
-    private fun process(state: Int, messages: List<Message>, message: Message): Pair<Int, List<Message>> {
-        return when(message) {
-            is Heartbeat -> ((state + message.content.toInt()) to messages)
-            is RequestForVotes -> (state to (if (shouldVote(messages)) messages + VoteFromFollower(address, Destination.from(message.src), "VOTE FROM FOLLOWER") else messages))
-            is VoteFromFollower -> (state to messages)
+    override fun process(accumulatedToSend: List<Message>, received: Message): Pair<Node, List<Message>> {
+        val (n, newToSend) =  when(received) {
+            is Heartbeat -> ((this.copy(state = state + received.content.toInt())) to accumulatedToSend)
+            is RequestForVotes -> (this to (if (shouldVote(accumulatedToSend)) accumulatedToSend + VoteFromFollower(address, Destination.from(received.src), "VOTE FROM FOLLOWER") else accumulatedToSend))
+            is VoteFromFollower -> (this to accumulatedToSend)
         }
+
+        return n to newToSend
     }
 
     override fun tick(): Node {
@@ -28,8 +30,8 @@ data class Follower(
     override fun tickWithoutSideEffects(): Pair<Node, List<Message>> {
         val tickMessages = network.get(this.address)
 
-        val (newState, messagesToSend) = tickMessages.fold(state to emptyList<Message>()) { (s, messages), msg ->
-            process(s, messages, msg)
+        val (node, messagesToSend) = tickMessages.fold(this as Node to emptyList<Message>()) { (n, messages), msg ->
+            n.process(messages, msg)
         }
 
         val messageLog = received + tickMessages.map { ReceivedMessage(it, network.clock) }
@@ -42,7 +44,8 @@ data class Follower(
             return candidate to messagesToSend
         }
 
-        return this.copy(state = newState, received = messageLog, sent = newSent) to messagesToSend
+        //return node to messagesToSend
+        return n.copy(received = messageLog, sent = newSent) to messagesToSend
     }
 
     //TODO UNIT TEST

@@ -42,7 +42,7 @@ data class Heartbeat(override val src: Source, override val dest: Destination, o
 //data class AppendEntries(override val src: Address, override val dest: Address, override val content: String) : Message(src, dest, content)
 
 
-abstract class Node(
+sealed class Node(
     open val address: Address,
     open val name: String,
     open val state: Int,
@@ -57,6 +57,7 @@ abstract class Node(
     }
     abstract fun tick(): Node
     abstract fun tickWithoutSideEffects(): Pair<Node, List<Message>>
+    abstract fun process(toSend: List<Message>, received: Message): Pair<Node, List<Message>>
     abstract fun receive(message: Message): Node
     fun send(message: Message) {
         network.add(message)
