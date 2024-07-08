@@ -28,6 +28,12 @@ data class Leader(
     // 3.
 
     override fun tick(): Node {
+        val (node, messages) = tickWithoutSideEffects()
+        messages.forEach { send(it) }
+        return node
+    }
+
+    override fun tickWithoutSideEffects(): Pair<Node, List<Message>> {
         val tickMessages = network.get(this.address)
 
         val (newState, responses) = tickMessages.fold(state to emptyList<Message>()) { (s, messages), msg ->
@@ -43,12 +49,11 @@ data class Leader(
         val heartbeats = nodesWeNeedToSendHeartbeatTo.map { Heartbeat(address, it, "0") }
 
         val messagesToSend = responses + heartbeats
-        messagesToSend.forEach { send(it) } // TODO remove side effect
 
         val messageLog = this.received + tickMessages.map { ReceivedMessage(it, network.clock) }
         val newSent = this.sent + messagesToSend.map { SentMessage(it, network.clock)}
 
-        return copy(state = newState, received = messageLog, sent = newSent )
+        return copy(state = newState, received = messageLog, sent = newSent) to messagesToSend
     }
 
     override fun receive(message: Message): Node {

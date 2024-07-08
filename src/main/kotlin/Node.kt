@@ -56,6 +56,7 @@ abstract class Node(
         return (0 .. ticks).fold(this) { acc, _ -> acc.tick() }
     }
     abstract fun tick(): Node
+    abstract fun tickWithoutSideEffects(): Pair<Node, List<Message>>
     abstract fun receive(message: Message): Node
     fun send(message: Message) {
         network.add(message)

@@ -20,13 +20,17 @@ data class Follower(
     }
 
     override fun tick(): Node {
+        val (node, messages) = tickWithoutSideEffects()
+        messages.forEach { send(it) }
+        return node
+    }
+
+    override fun tickWithoutSideEffects(): Pair<Node, List<Message>> {
         val tickMessages = network.get(this.address)
 
         val (newState, messagesToSend) = tickMessages.fold(state to emptyList<Message>()) { (s, messages), msg ->
             process(s, messages, msg)
         }
-
-        messagesToSend.forEach { send(it) } // TODO remove side effect
 
         val messageLog = received + tickMessages.map { ReceivedMessage(it, network.clock) }
         val newSent = sent + messagesToSend.map { SentMessage(it, network.clock) }
@@ -35,10 +39,10 @@ data class Follower(
             // TODO when creating a candidate (promoting a follower), add a 'VoteFromFollower' from self to received messageLogMove this to a Candidate constructor that takes a Follower
             val candidate = promote(messageLog, newSent)
             peers.forEach { peer -> candidate.send(RequestForVotes(this.address, peer, "REQUEST FOR VOTES")) } // TODO Refactor to return the messages to be sent instead of a side effect
-            return candidate
+            return candidate to messagesToSend
         }
 
-         return this.copy(state = newState, received = messageLog, sent = newSent)
+        return this.copy(state = newState, received = messageLog, sent = newSent) to messagesToSend
     }
 
     //TODO UNIT TEST

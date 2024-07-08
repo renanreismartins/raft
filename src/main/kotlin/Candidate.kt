@@ -13,7 +13,7 @@ data class Candidate(
 
     // TODO Make process return Node, so we have finer control over how we handle each message
     //      e.g. If a Candidate receives a Heartbeat, it should demote to follower, this is difficult
-    //      with the current architecture. This would lead allow us to remove methods to demote/promote
+    //      with the current architecture. This would allow us to remove methods to demote/promote
     private fun process(state: Int, messages: List<Message>, message: Message): Pair<Int, List<Message>> {
         return when(message) {
             is Heartbeat -> ((state + message.content.toInt()) to messages)
@@ -23,6 +23,12 @@ data class Candidate(
     }
 
     override fun tick(): Node {
+        val (node, messages) = tickWithoutSideEffects()
+        messages.forEach { send(it) }
+        return node
+    }
+
+    override fun tickWithoutSideEffects(): Pair<Node, List<Message>> {
         //TODO We have this common logic in the Follower, move it to Node
         val tickMessages = network.get(this.address)
 
@@ -30,23 +36,21 @@ data class Candidate(
             process(s, messages, msg)
         }
 
-        messagesToSend.forEach { send(it) } // TODO remove side effect
-
         val messageLog = received + tickMessages.map { ReceivedMessage(it, network.clock) }
         val newSent = sent + messagesToSend.map { SentMessage(it, network.clock)}
 
         if (shouldDemoteToFollower(messageLog)) {
-            return demote(newState, messageLog, newSent)
+            return demote(newState, messageLog, newSent) to messagesToSend
         }
 
         if (shouldBecomeLeader(messageLog)) {
             val leader = promote(newState, messageLog, newSent)
             // TODO Refactor to return the messages to be sent instead of a side effect
             peers.forEach { peer -> leader.send(Heartbeat( leader.address, peer, "0")) }
-            return leader
+            return leader to messagesToSend
         }
 
-        return this.copy(state = newState, received = messageLog, sent = newSent)
+        return this.copy(state = newState, received = messageLog, sent = newSent) to messagesToSend
     }
 
     fun shouldBecomeLeader(messageLog: List<ReceivedMessage>): Boolean {
