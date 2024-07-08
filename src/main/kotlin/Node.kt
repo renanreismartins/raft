@@ -27,10 +27,11 @@ data class Destination(override val host: String, override val port: Int) : Addr
     }
 }
 
-typealias ReceivedAt = Int //TODO Make this a Comparable, so when we change it to a 'Date' type for the real world, we do not need to change the usages
 
-data class SentMessage(val message: Message, val sentAt: ReceivedAt)
-data class ReceivedMessage(val message: Message, val receivedAt: ReceivedAt)
+typealias Timestamp = Int //TODO Make this a Comparable, so when we change it to a 'Date' type for the real world, we do not need to change the usages
+
+data class SentMessage(val message: Message, val sentAt: Timestamp)
+data class ReceivedMessage(val message: Message, val receivedAt: Timestamp)
 
 // TODO add tiny type Source and Destination
 sealed class Message(open val src: Source, open val dest: Destination, open val content: String) //TODO remove 'content' from the Message and add it to the subclasses if we have one type of Message without 'content'
