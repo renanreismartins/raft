@@ -14,18 +14,19 @@ class CandidateTest {
     fun `Does not become a leader if it has not received Votes from the majority of the cluster`() {
         val candidate = candidate()
 
-        assertFalse(candidate.shouldBecomeLeader(emptyList()))
+        assertFalse(candidate.shouldBecomeLeader())
     }
 
     @Test
     fun `Becomes a leader if it has received Votes from the majority of the cluster`() {
-        val candidate = candidate()
-
         val messageLog = listOf(
             ReceivedMessage(VoteFromFollower(Source("host1", 1), Destination("host0", 1), "Vote"), 0),
             ReceivedMessage(VoteFromFollower(Source("host2", 1), Destination("host0", 1), "Vote"), 0),
         )
-        assertTrue(candidate.shouldBecomeLeader(messageLog))
+
+        val candidate = candidate().copy(received = messageLog)
+
+        assertTrue(candidate.shouldBecomeLeader())
     }
 
     fun candidate(): Candidate {
