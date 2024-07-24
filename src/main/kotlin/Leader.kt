@@ -15,12 +15,15 @@ data class Leader(
     override val config: Config = Config(),
 ): Node(address, name, state, network, peers, received) {
 
-    private fun process(state: Int, messages: List<Message>, message: Message): Pair<Int, List<Message>> {
-        return when(message) {
-            is Heartbeat -> ((state + message.content.toInt()) to messages)
-            is RequestForVotes -> (state to messages)
-            is VoteFromFollower -> (state to messages)
+    override fun process(accumulatedToSend: List<Message>, received: Message): Pair<Node, List<Message>> {
+        val (n, newToSend) = when(received) {
+            is Heartbeat -> (this.copy(state = state + received.content.toInt()) to accumulatedToSend)
+            is RequestForVotes -> (this to accumulatedToSend)
+            is VoteFromFollower -> (this to accumulatedToSend)
         }
+
+        val n2 = n.copy(received = n.received + ReceivedMessage(received, network.clock), sent = n.sent + newToSend.map { SentMessage(it, network.clock) } )
+        return n2 to accumulatedToSend + newToSend
     }
 
     // 1. Process messages, create messages to send
@@ -36,8 +39,8 @@ data class Leader(
     override fun tickWithoutSideEffects(): Pair<Node, List<Message>> {
         val tickMessages = network.get(this.address)
 
-        val (newState, responses) = tickMessages.fold(state to emptyList<Message>()) { (s, messages), msg ->
-            process(s, messages, msg)
+        val (node, responses) = tickMessages.fold(this as Node to emptyList<Message>()) { (n, messages), msg ->
+            n.process(messages, msg)
         }
 
         val nodesWeHaveSentMessagesTo =
@@ -48,12 +51,7 @@ data class Leader(
 
         val heartbeats = nodesWeNeedToSendHeartbeatTo.map { Heartbeat(address, it, "0") }
 
-        val messagesToSend = responses + heartbeats
-
-        val messageLog = this.received + tickMessages.map { ReceivedMessage(it, network.clock) }
-        val newSent = this.sent + messagesToSend.map { SentMessage(it, network.clock)}
-
-        return copy(state = newState, received = messageLog, sent = newSent) to messagesToSend
+        return (node as Leader).copy(sent = node.sent + heartbeats.map { SentMessage(it, network.clock) }) to responses + heartbeats
     }
 
     override fun receive(message: Message): Node {

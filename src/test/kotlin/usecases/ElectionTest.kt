@@ -44,8 +44,9 @@ class ElectionTest {
         assertEquals("VOTE FROM FOLLOWER", leaderWithVote.received.first().message.content)
     }
 
+    //TODO use the assertIs idiomatic matchers
     @Test
-    fun `With 3 nodes, where 2 will promote to Candidate at the same tick, only one will receive a vote from the remaining Follower (and promote) the other will revert to Follower`() {
+    fun `With 3 nodes, where 2 will promote to Candidate at the same tick, only one will receive a vote from the remaining Follower (and promote), the other will revert to Follower`() {
         // Given
         val network = Network()
 
@@ -67,6 +68,9 @@ class ElectionTest {
         assertTrue(candidateWillLose is Candidate)
         assertTrue(follower is Follower)
 
+        // Make sure the Request For Votes arrived at the Follower
+
+        //TODO Make a assertion matcher to guarantee a node sent a message and it arrived on the other Node and write an ADR
         val futureWinnerRequestForVotes = follower.received.first().message
         assertTrue(futureWinnerRequestForVotes is RequestForVotes)
         assertEquals(willBecomeLeaderAddress, futureWinnerRequestForVotes.src)

@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test
 
 class FollowerTest {
     @Test
-    fun `Do not vote for more than one Candidate`() {
+    fun `After receiving Request For Votes from more than one candidate, responde with a Vote to only one of them`() {
         val network = Network(mapOf(Source("host", 1) to listOf(
             NetworkMessage(RequestForVotes(Source("host", 2), Destination("host", 1), "REQUEST FOR VOTES"), 0),
             NetworkMessage(RequestForVotes(Source("host", 3), Destination("host", 1), "REQUEST FOR VOTES"), 0)
