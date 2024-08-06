@@ -43,7 +43,7 @@ data class Heartbeat(override val src: Source, override val dest: Destination, o
 
 
 sealed class Node(
-    open val address: Address,
+    open val address: Source,
     open val name: String,
     open val state: Int,
     open val network: Network,
@@ -55,11 +55,30 @@ sealed class Node(
     fun tick(ticks: Int): Node {
         return (0 .. ticks).fold(this) { acc, _ -> acc.tick() }
     }
-    abstract fun tick(): Node
-    abstract fun tickWithoutSideEffects(): Pair<Node, List<Message>>
-    abstract fun process(toSend: List<Message>, received: Message): Pair<Node, List<Message>>
+
+    fun tick(): Node {
+        val node = tickWithoutSideEffects()
+        // TODO: All 'pending' messages are also added to the sent list, but we haven't sent them yet.
+        //   instead, we should add a 'buffer' on the Node, which gets added to in process/handleMessage and then flushed here
+        node.sent.filter { it.sentAt == network.clock }.forEach { send(it.message) }
+        return node
+    }
+
+    abstract fun tickWithoutSideEffects(): Node
+    abstract fun handleMessage(message: Message): Node
+
+    fun process(received: Message): Node {
+        return add(received.toReceived()).handleMessage(received)
+    }
     abstract fun receive(message: Message): Node
+
+    abstract fun add(vararg message: SentMessage): Node
+    abstract fun add(vararg message: ReceivedMessage): Node
+
     fun send(message: Message) {
         network.add(message)
     }
+
+    fun Message.toSent(): SentMessage = SentMessage(this, network.clock)
+    fun Message.toReceived(): ReceivedMessage = ReceivedMessage(this, network.clock)
 }
