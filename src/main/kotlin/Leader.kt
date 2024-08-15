@@ -15,44 +15,36 @@ data class Leader(
     override val config: Config = Config(),
 ): Node(address, name, state, network, peers, received) {
 
-    override fun process(accumulatedToSend: List<Message>, received: Message): Pair<Node, List<Message>> {
-        val (n, newToSend) = when(received) {
-            is Heartbeat -> (this.copy(state = state + received.content.toInt()) to accumulatedToSend)
-            is RequestForVotes -> (this to accumulatedToSend)
-            is VoteFromFollower -> (this to accumulatedToSend)
+    override fun handleMessage(message: Message): Node {
+        return when(message) {
+            is Heartbeat -> this.copy(state = state + message.content.toInt())
+            is RequestForVotes -> this
+            is VoteFromFollower -> this
         }
-
-        val n2 = n.copy(received = n.received + ReceivedMessage(received, network.clock), sent = n.sent + newToSend.map { SentMessage(it, network.clock) } )
-        return n2 to accumulatedToSend + newToSend
     }
 
-    // 1. Process messages, create messages to send
-    // 2. THEN, check sent messages to see which peers we need to send a heartbeat to
-    // 3.
-
-    override fun tick(): Node {
-        val (node, messages) = tickWithoutSideEffects()
-        messages.forEach { send(it) }
-        return node
-    }
-
-    override fun tickWithoutSideEffects(): Pair<Node, List<Message>> {
+    override fun tickWithoutSideEffects(): Node {
         val tickMessages = network.get(this.address)
 
-        val (node, responses) = tickMessages.fold(this as Node to emptyList<Message>()) { (n, messages), msg ->
-            n.process(messages, msg)
+        val node = tickMessages.fold(this as Node) { node, msg ->
+            node.process(msg)
         }
 
         val nodesWeHaveSentMessagesTo =
-            sent.filter { it.sentAt > network.clock - config.heartbeatTimeout }
-                .map { it.message.dest } + responses.map { it.dest }
+            // TODO: Remember the buffer! The OR can be replaced with appending the buffer content
+            node.sent
+                .filter { it.sentAt > network.clock - config.heartbeatTimeout || it.sentAt == network.clock }
+                .map { it.message.dest }
 
         val nodesWeNeedToSendHeartbeatTo = peers.toSet() - nodesWeHaveSentMessagesTo.toSet()
 
         val heartbeats = nodesWeNeedToSendHeartbeatTo.map { Heartbeat(address, it, "0") }
 
-        return (node as Leader).copy(sent = node.sent + heartbeats.map { SentMessage(it, network.clock) }) to responses + heartbeats
+        return node.add(*heartbeats.map { SentMessage(it, network.clock) }.toTypedArray())
     }
+
+    override fun add(vararg message: SentMessage): Leader = this.copy(sent = sent + message)
+    override fun add(vararg message: ReceivedMessage): Leader = this.copy(received = received + message)
 
     override fun receive(message: Message): Node {
         TODO("Not yet implemented")
