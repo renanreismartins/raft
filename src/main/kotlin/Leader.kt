@@ -13,7 +13,7 @@ data class Leader(
     override val received: List<ReceivedMessage> = emptyList(), // TODO: Make a map <Destination, List<ReceivedMessage>>
     override val sent: List<SentMessage> = emptyList(),
     override val config: Config = Config(),
-): Node(address, name, state, network, peers, received) {
+): Node(address, name, state, network, peers) {
 
     override fun handleMessage(message: Message): Node {
         return when(message) {

@@ -9,7 +9,7 @@ data class Follower(
     override val received: List<ReceivedMessage> = emptyList(),
     override val sent: List<SentMessage> = emptyList(),
     override val config: Config = Config(),
-): Node(address, name, state, network, peers, received) {
+): Node(address, name, state, network, peers) {
 
     override fun handleMessage(message: Message): Node {
         return when(message) {

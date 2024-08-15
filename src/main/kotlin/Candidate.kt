@@ -9,7 +9,7 @@ data class Candidate(
     override val received: List<ReceivedMessage> = emptyList(),
     override val sent: List<SentMessage> = emptyList(),
     override val config: Config = Config(),
-): Node(address, name, state, network, peers, received) {
+): Node(address, name, state, network, peers) {
 
     // TODO Make process return Node, so we have finer control over how we handle each message
     //      e.g. If a Candidate receives a Heartbeat, it should demote to follower, this is difficult
