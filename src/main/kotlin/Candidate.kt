@@ -40,7 +40,7 @@ data class Candidate(
     fun shouldBecomeLeader(): Boolean {
         println("should become leader")
         //TODO + 1 represents the Vote for Self, do we want to add it to the MessageLogEntry and remove it from here
-        return receivedMessages().count { m -> m.message is VoteFromFollower } + 1 > clusterSize() / 2
+        return received().count { m -> m.message is VoteFromFollower } + 1 > clusterSize() / 2
     }
 
     private fun clusterSize(): Int  {
@@ -53,8 +53,8 @@ data class Candidate(
     }
 
     //TODO It seems the 'received =' can be removed as Kotlin can infer the type
-    override fun add(vararg message: ReceivedMessage): Candidate = this.copy(messages = messages.copy(received = receivedMessages() + message))
-    override fun add(vararg message: SentMessage): Candidate = this.copy(messages = messages.copy(sent = sentMessages() + message))
+    override fun add(vararg message: ReceivedMessage): Candidate = this.copy(messages = messages.copy(received = received() + message))
+    override fun add(vararg message: SentMessage): Candidate = this.copy(messages = messages.copy(sent = sent() + message))
 
     private fun promote(): Leader {
         return Leader(this.address, this.name, this.state, this.network, this.peers, this.messages, this.config)

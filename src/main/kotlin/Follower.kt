@@ -15,7 +15,7 @@ data class Follower(
             is Heartbeat -> (this.copy(state = state + message.content.toInt()))
             is RequestForVotes -> {
                 // TODO: BUFFER instead of filter!
-                if (shouldVote(sentMessages().filter { it.sentAt == network.clock }.map { it.message })) {
+                if (shouldVote(sent().filter { it.sentAt == network.clock }.map { it.message })) {
                     add(VoteFromFollower(address, Destination.from(message.src), "VOTE FROM FOLLOWER").toSent())
                 } else {
                     this
@@ -47,9 +47,9 @@ data class Follower(
     //TODO UNIT TEST
     private fun shouldPromote(): Boolean {
         // On system startup, Follower hasn't received any messages and should promote itself after electionTimeout
-        val hasReachedFirstTimeoutAfterStartup = receivedMessages().isEmpty() && network.clock > config.electionTimeout
+        val hasReachedFirstTimeoutAfterStartup = received().isEmpty() && network.clock > config.electionTimeout
         // During normal operation of the system, has not received messages in electionTimeout period
-        val hasReachedTimeoutWithLastMessage = receivedMessages().isNotEmpty() && network.clock - receivedMessages().last().receivedAt > config.electionTimeout
+        val hasReachedTimeoutWithLastMessage = received().isNotEmpty() && network.clock - received().last().receivedAt > config.electionTimeout
         return hasReachedTimeoutWithLastMessage || hasReachedFirstTimeoutAfterStartup
     }
 
@@ -59,12 +59,12 @@ data class Follower(
 
     //TODO unit test
     fun shouldVote(tickMessages: List<Message>): Boolean {
-        return (sentMessages() + tickMessages).filterIsInstance<VoteFromFollower>().isEmpty()
+        return (sent() + tickMessages).filterIsInstance<VoteFromFollower>().isEmpty()
     }
 
     //TODO It seems the 'received =' can be removed as Kotlin can infer the type
-    override fun add(vararg message: SentMessage): Follower = this.copy(messages = messages.copy(sent = sentMessages() + message))
-    override fun add(vararg message: ReceivedMessage): Follower = this.copy(messages = messages.copy(received = receivedMessages() + message))
+    override fun add(vararg message: SentMessage): Follower = this.copy(messages = messages.copy(sent = sent() + message))
+    override fun add(vararg message: ReceivedMessage): Follower = this.copy(messages = messages.copy(received = received() + message))
 
     private fun promote(): Candidate {
         return Candidate(this.address, this.name, this.state, this.network, this.peers, this.messages)

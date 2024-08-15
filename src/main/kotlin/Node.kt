@@ -60,8 +60,8 @@ sealed class Node(
     fun tick(): Node {
         val node = tickWithoutSideEffects()
         // TODO: All 'pending' messages are also added to the sent list, but we haven't sent them yet.
-        //   instead, we should add a 'buffer' on the Node, which gets added to in process/handleMessage and then flushed here
-        node.sentMessages().filter { it.sentAt == network.clock }.forEach { send(it.message) }
+        // instead, we should add a 'buffer' on the Node, which gets added to in process/handleMessage and then flushed here
+        node.sent().filter { it.sentAt == network.clock }.forEach { send(it.message) }
         return node
     }
 
@@ -85,6 +85,6 @@ sealed class Node(
     fun Message.toSent(): SentMessage = SentMessage(this, network.clock)
     fun Message.toReceived(): ReceivedMessage = ReceivedMessage(this, network.clock)
 
-    fun sentMessages() = messages.sent
-    fun receivedMessages() = messages.received
+    fun sent() = messages.sent
+    fun received() = messages.received
 }

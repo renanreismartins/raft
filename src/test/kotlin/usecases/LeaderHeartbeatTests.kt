@@ -53,7 +53,7 @@ class LeaderHeartbeatTests {
 
         val (_, leader, followerOldHeartbeat_, followerNewHeartbeat) = timeMachine.tick()
 
-        assertEquals(2, leader.sentMessages().size)
+        assertEquals(2, leader.sent().size)
 
         // TODO check received messages on followers
     }

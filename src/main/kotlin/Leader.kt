@@ -31,7 +31,7 @@ data class Leader(
 
         val nodesWeHaveSentMessagesTo =
             // TODO: Remember the buffer! The OR can be replaced with appending the buffer content
-            node.sentMessages()
+            node.sent()
                 .filter { it.sentAt > network.clock - config.heartbeatTimeout || it.sentAt == network.clock }
                 .map { it.message.dest }
 
@@ -43,8 +43,8 @@ data class Leader(
     }
 
     //TODO It seems the 'received =' can be removed as Kotlin can infer the type
-    override fun add(vararg message: SentMessage): Leader = this.copy(messages = messages.copy(sent = sentMessages() + message))
-    override fun add(vararg message: ReceivedMessage): Leader = this.copy(messages = messages.copy(received = receivedMessages() + message))
+    override fun add(vararg message: SentMessage): Leader = this.copy(messages = messages.copy(sent = sent() + message))
+    override fun add(vararg message: ReceivedMessage): Leader = this.copy(messages = messages.copy(received = received() + message))
 
     override fun receive(message: Message): Node {
         TODO("Not yet implemented")

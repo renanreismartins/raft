@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test
 
 class FollowerTest {
     @Test
-    fun `After receiving Request For Votes from more than one candidate, responde with a Vote to only one of them`() {
+    fun `After receiving Request For Votes from more than one candidate, respond with a Vote to only one of them`() {
         val network = Network(mapOf(Source("host", 1) to listOf(
             NetworkMessage(RequestForVotes(Source("host", 2), Destination("host", 1), "REQUEST FOR VOTES"), 0),
             NetworkMessage(RequestForVotes(Source("host", 3), Destination("host", 1), "REQUEST FOR VOTES"), 0)
@@ -22,6 +22,6 @@ class FollowerTest {
         val timeMachine = TimeMachine(network, Follower(Source("host", 1), "follower", 0, network, emptyList()))
         val (_, follower) = timeMachine.tick()
 
-        assertEquals(listOf(SentMessage(VoteFromFollower(Source("host", 1), Destination("host", 2), "VOTE FROM FOLLOWER"), 1)), follower.sentMessages())
+        assertEquals(listOf(SentMessage(VoteFromFollower(Source("host", 1), Destination("host", 2), "VOTE FROM FOLLOWER"), 1)), follower.sent())
     }
 }
