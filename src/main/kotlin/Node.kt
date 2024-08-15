@@ -30,6 +30,8 @@ data class Destination(override val host: String, override val port: Int) : Addr
 
 typealias Timestamp = Int //TODO Make this a Comparable, so when we change it to a 'Date' type for the real world, we do not need to change the usages
 
+// TODO: Make a map <Destination, List<ReceivedMessage>> for the received
+data class Messages(val received: List<ReceivedMessage> = emptyList(), val sent: List<SentMessage> = emptyList(), val toSend: List<Message> = emptyList())
 data class SentMessage(val message: Message, val sentAt: Timestamp)
 data class ReceivedMessage(val message: Message, val receivedAt: Timestamp)
 
@@ -48,8 +50,7 @@ sealed class Node(
     open val state: Int,
     open val network: Network,
     open val peers: List<Destination>,
-    open val received: List<ReceivedMessage> = emptyList(),
-    open val sent: List<SentMessage> = emptyList(),
+    open val messages: Messages = Messages(),
     open val config: Config = Config(),
 ) {
     fun tick(ticks: Int): Node {
@@ -60,7 +61,7 @@ sealed class Node(
         val node = tickWithoutSideEffects()
         // TODO: All 'pending' messages are also added to the sent list, but we haven't sent them yet.
         //   instead, we should add a 'buffer' on the Node, which gets added to in process/handleMessage and then flushed here
-        node.sent.filter { it.sentAt == network.clock }.forEach { send(it.message) }
+        node.sentMessages().filter { it.sentAt == network.clock }.forEach { send(it.message) }
         return node
     }
 
@@ -72,6 +73,8 @@ sealed class Node(
     }
     abstract fun receive(message: Message): Node
 
+    //TODO add receiving a list would avoid having to do the convoluted calls transforming a list in a typedArray and then using the * to destruct the array?
+    // as in node.add(*heartbeats.map { SentMessage(it, network.clock) }.toTypedArray())
     abstract fun add(vararg message: SentMessage): Node
     abstract fun add(vararg message: ReceivedMessage): Node
 
@@ -81,4 +84,7 @@ sealed class Node(
 
     fun Message.toSent(): SentMessage = SentMessage(this, network.clock)
     fun Message.toReceived(): ReceivedMessage = ReceivedMessage(this, network.clock)
+
+    fun sentMessages() = messages.sent
+    fun receivedMessages() = messages.received
 }

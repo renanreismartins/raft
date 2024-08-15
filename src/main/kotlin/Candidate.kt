@@ -6,8 +6,7 @@ data class Candidate(
     override val state: Int = 0,
     override val network: Network,
     override val peers: List<Destination>,
-    override val received: List<ReceivedMessage> = emptyList(),
-    override val sent: List<SentMessage> = emptyList(),
+    override val messages: Messages = Messages(),
     override val config: Config = Config(),
 ): Node(address, name, state, network, peers) {
 
@@ -41,7 +40,7 @@ data class Candidate(
     fun shouldBecomeLeader(): Boolean {
         println("should become leader")
         //TODO + 1 represents the Vote for Self, do we want to add it to the MessageLogEntry and remove it from here
-        return received.count { m -> m.message is VoteFromFollower } + 1 > clusterSize() / 2
+        return receivedMessages().count { m -> m.message is VoteFromFollower } + 1 > clusterSize() / 2
     }
 
     private fun clusterSize(): Int  {
@@ -53,15 +52,15 @@ data class Candidate(
         TODO("Not yet implemented")
     }
 
-    override fun add(vararg message: SentMessage): Candidate = this.copy(sent = sent + message)
-    override fun add(vararg message: ReceivedMessage): Candidate = this.copy(received = received + message)
+    //TODO It seems the 'received =' can be removed as Kotlin can infer the type
+    override fun add(vararg message: ReceivedMessage): Candidate = this.copy(messages = messages.copy(received = receivedMessages() + message))
+    override fun add(vararg message: SentMessage): Candidate = this.copy(messages = messages.copy(sent = sentMessages() + message))
 
     private fun promote(): Leader {
-        return Leader(this.address, this.name, this.state, this.network, this.peers, this.received, this.sent, this.config)
+        return Leader(this.address, this.name, this.state, this.network, this.peers, this.messages, this.config)
     }
 
     private fun demote(): Follower {
-        return Follower(this.address, this.name, this.state, this.network, this.peers, this.received, this.sent, this.config)
+        return Follower(this.address, this.name, this.state, this.network, this.peers, this.messages, this.config)
     }
-
 }

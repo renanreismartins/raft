@@ -19,9 +19,9 @@ class FollowerTest {
         )))
 
         //TODO Write an ADR on why use time machine instead of tick on the Node and Network and why the Network is mutable
-        val timeMachine = TimeMachine(network, Follower(Source("host", 1), "follower", 0, network, emptyList(), emptyList()))
+        val timeMachine = TimeMachine(network, Follower(Source("host", 1), "follower", 0, network, emptyList()))
         val (_, follower) = timeMachine.tick()
 
-        assertEquals(listOf(SentMessage(VoteFromFollower(Source("host", 1), Destination("host", 2), "VOTE FROM FOLLOWER"), 1)), follower.sent)
+        assertEquals(listOf(SentMessage(VoteFromFollower(Source("host", 1), Destination("host", 2), "VOTE FROM FOLLOWER"), 1)), follower.sentMessages())
     }
 }

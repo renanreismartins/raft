@@ -24,7 +24,7 @@ class CandidateTest {
             ReceivedMessage(VoteFromFollower(Source("host2", 1), Destination("host0", 1), "Vote"), 0),
         )
 
-        val candidate = candidate().copy(received = messageLog)
+        val candidate = candidate().add(*messageLog.toTypedArray())
 
         assertTrue(candidate.shouldBecomeLeader())
     }

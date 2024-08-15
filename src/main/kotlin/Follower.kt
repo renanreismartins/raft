@@ -6,8 +6,7 @@ data class Follower(
     override val state: Int = 0,
     override val network: Network,
     override val peers: List<Destination>,
-    override val received: List<ReceivedMessage> = emptyList(),
-    override val sent: List<SentMessage> = emptyList(),
+    override val messages: Messages = Messages(),
     override val config: Config = Config(),
 ): Node(address, name, state, network, peers) {
 
@@ -16,7 +15,7 @@ data class Follower(
             is Heartbeat -> (this.copy(state = state + message.content.toInt()))
             is RequestForVotes -> {
                 // TODO: BUFFER instead of filter!
-                if (shouldVote(sent.filter { it.sentAt == network.clock }.map { it.message })) {
+                if (shouldVote(sentMessages().filter { it.sentAt == network.clock }.map { it.message })) {
                     add(VoteFromFollower(address, Destination.from(message.src), "VOTE FROM FOLLOWER").toSent())
                 } else {
                     this
@@ -38,8 +37,8 @@ data class Follower(
             // TODO when creating a candidate (promoting a follower), add a 'VoteFromFollower' from self to received messageLog. Move this to a Candidate constructor that takes a Follower
             val candidate = node.promote()
             val requestForVotes = peers.map { peer -> RequestForVotes(this.address, peer, "REQUEST FOR VOTES") }
-            // TODO: use `add` instead
-            return candidate.copy(sent = candidate.sent + requestForVotes.map { SentMessage(it, network.clock) })
+
+            return candidate.add(*requestForVotes.map { SentMessage(it, network.clock) }.toTypedArray())
         }
 
         return node
@@ -48,9 +47,9 @@ data class Follower(
     //TODO UNIT TEST
     private fun shouldPromote(): Boolean {
         // On system startup, Follower hasn't received any messages and should promote itself after electionTimeout
-        val hasReachedFirstTimeoutAfterStartup = received.isEmpty() && network.clock > config.electionTimeout
+        val hasReachedFirstTimeoutAfterStartup = receivedMessages().isEmpty() && network.clock > config.electionTimeout
         // During normal operation of the system, has not received messages in electionTimeout period
-        val hasReachedTimeoutWithLastMessage = received.isNotEmpty() && network.clock - received.last().receivedAt > config.electionTimeout
+        val hasReachedTimeoutWithLastMessage = receivedMessages().isNotEmpty() && network.clock - receivedMessages().last().receivedAt > config.electionTimeout
         return hasReachedTimeoutWithLastMessage || hasReachedFirstTimeoutAfterStartup
     }
 
@@ -60,13 +59,15 @@ data class Follower(
 
     //TODO unit test
     fun shouldVote(tickMessages: List<Message>): Boolean {
-        return (sent + tickMessages).filterIsInstance<VoteFromFollower>().isEmpty()
+        return (sentMessages() + tickMessages).filterIsInstance<VoteFromFollower>().isEmpty()
     }
 
-    override fun add(vararg message: SentMessage): Follower = this.copy(sent = sent + message)
-    override fun add(vararg message: ReceivedMessage): Follower = this.copy(received = received + message)
+    //TODO It seems the 'received =' can be removed as Kotlin can infer the type
+    override fun add(vararg message: SentMessage): Follower = this.copy(messages = messages.copy(sent = sentMessages() + message))
+    override fun add(vararg message: ReceivedMessage): Follower = this.copy(messages = messages.copy(received = receivedMessages() + message))
 
     private fun promote(): Candidate {
-        return Candidate(this.address, this.name, this.state, this.network, this.peers, this.received, this.sent)
+        return Candidate(this.address, this.name, this.state, this.network, this.peers, this.messages)
     }
+
 }
