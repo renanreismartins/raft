@@ -4,6 +4,7 @@ import org.example.Destination
 import org.example.Follower
 import org.example.Heartbeat
 import org.example.Leader
+import org.example.Messages
 import org.example.Network
 import org.example.ReceivedMessage
 import org.example.SentMessage
@@ -30,7 +31,7 @@ class LeaderHeartbeatTests {
             "Leader",
             peers = listOf(Destination.from(followerWithCommunicationAddress), Destination.from(followerWithoutCommunicationAddress)),
             network = network,
-            sent = listOf(SentMessage(Heartbeat(leaderAddress, Destination.from(followerWithCommunicationAddress), "0"), 0))
+            messages = Messages(sent = listOf(SentMessage(Heartbeat(leaderAddress, Destination.from(followerWithCommunicationAddress), "0"), 0)))
         )
 
         val followerWithCommunication = Follower(
@@ -38,7 +39,7 @@ class LeaderHeartbeatTests {
             "FollowerWithCommunication",
             network = network,
             peers = listOf(),
-            received = listOf(ReceivedMessage(Heartbeat(leaderAddress, Destination.from(followerWithCommunicationAddress), "0"), 1))
+            messages = Messages(received = listOf(ReceivedMessage(Heartbeat(leaderAddress, Destination.from(followerWithCommunicationAddress), "0"), 1)))
         )
 
         val followerWithoutCommunication = Follower(
@@ -52,7 +53,7 @@ class LeaderHeartbeatTests {
 
         val (_, leader, followerOldHeartbeat_, followerNewHeartbeat) = timeMachine.tick()
 
-        assertEquals(2, leader.sent.size)
+        assertEquals(2, leader.sent().size)
 
         // TODO check received messages on followers
     }

@@ -10,10 +10,9 @@ data class Leader(
     override val state: Int = 0,
     override val network: Network,
     override val peers: List<Destination>,
-    override val received: List<ReceivedMessage> = emptyList(), // TODO: Make a map <Destination, List<ReceivedMessage>>
-    override val sent: List<SentMessage> = emptyList(),
+    override val messages: Messages = Messages(),
     override val config: Config = Config(),
-): Node(address, name, state, network, peers, received) {
+): Node(address, name, state, network, peers) {
 
     override fun handleMessage(message: Message): Node {
         return when(message) {
@@ -31,20 +30,21 @@ data class Leader(
         }
 
         val nodesWeHaveSentMessagesTo =
-            // TODO: Remember the buffer! The OR can be replaced with appending the buffer content
-            node.sent
-                .filter { it.sentAt > network.clock - config.heartbeatTimeout || it.sentAt == network.clock }
-                .map { it.message.dest }
+            // TODO: encapsulate? also add election term in the future
+            node.sent()
+                .filter { it.sentAt > network.clock - config.heartbeatTimeout }
+                .map { it.message.dest } +
+                    node.messages.toSend.map { it.dest }
 
         val nodesWeNeedToSendHeartbeatTo = peers.toSet() - nodesWeHaveSentMessagesTo.toSet()
-
         val heartbeats = nodesWeNeedToSendHeartbeatTo.map { Heartbeat(address, it, "0") }
 
-        return node.add(*heartbeats.map { SentMessage(it, network.clock) }.toTypedArray())
+        return node.toSend(heartbeats)
     }
 
-    override fun add(vararg message: SentMessage): Leader = this.copy(sent = sent + message)
-    override fun add(vararg message: ReceivedMessage): Leader = this.copy(received = received + message)
+    //TODO It seems the 'received =' can be removed as Kotlin can infer the type
+    override fun add(vararg message: SentMessage): Leader = this.copy(messages = messages.copy(sent = sent() + message))
+    override fun add(vararg message: ReceivedMessage): Leader = this.copy(messages = messages.copy(received = received() + message))
 
     override fun receive(message: Message): Node {
         TODO("Not yet implemented")
