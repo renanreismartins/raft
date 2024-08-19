@@ -38,9 +38,7 @@ data class Candidate(
     }
 
     fun shouldBecomeLeader(): Boolean {
-        println("should become leader")
-        //TODO + 1 represents the Vote for Self, do we want to add it to the MessageLogEntry and remove it from here
-        return received().count { m -> m.message is VoteFromFollower } + 1 > clusterSize() / 2
+        return received().count { m -> m.message is VoteFromFollower } > clusterSize() / 2
     }
 
     private fun clusterSize(): Int  {

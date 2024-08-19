@@ -14,7 +14,6 @@ data class Follower(
         return when(message) {
             is Heartbeat -> (this.copy(state = state + message.content.toInt()))
             is RequestForVotes -> {
-                // TODO: BUFFER instead of filter!
                 if (shouldVote()) {
                     toSend(VoteFromFollower(address, Destination.from(message.src), "VOTE FROM FOLLOWER"))
                 } else {
@@ -34,10 +33,7 @@ data class Follower(
 
         // TODO: Move the first part (above this comment) into a Node method, then introduce a postProcess method for this logic (and logic in Leader)
         if ((node as Follower).shouldPromote()) {
-            // TODO when creating a candidate (promoting a follower), add a 'VoteFromFollower' from self to received messageLog. Move this to a Candidate constructor that takes a Follower
-            val candidate = node.promote()
-            val requestForVotes = peers.map { peer -> RequestForVotes(this.address, peer, "REQUEST FOR VOTES") }
-            return candidate.toSend(requestForVotes)
+            return node.promote()
         }
 
         return node
@@ -67,7 +63,12 @@ data class Follower(
     override fun add(vararg message: ReceivedMessage): Follower = this.copy(messages = messages.copy(received = received() + message))
 
     private fun promote(): Candidate {
-        return Candidate(this.address, this.name, this.state, this.network, this.peers, this.messages)
+        val requestForVotes = peers.map { peer -> RequestForVotes(this.address, peer, "REQUEST FOR VOTES") }
+        val messages = this.messages
+            .received(VoteFromFollower(this.address, Destination.from(this.address), "Vote from self").toReceived())
+            .toSend(requestForVotes)
+
+        return Candidate(this.address, this.name, this.state, this.network, this.peers, messages)
     }
 
 }

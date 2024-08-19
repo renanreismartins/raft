@@ -41,7 +41,8 @@ class ElectionTest {
         val (_, leaderWithVote, _)= timeMachine.tick()
 
         assertTrue(leaderWithVote is Leader)
-        assertEquals("VOTE FROM FOLLOWER", leaderWithVote.received().first().message.content)
+        assertEquals("Vote from self", leaderWithVote.received().first().message.content)
+        assertEquals("VOTE FROM FOLLOWER", leaderWithVote.received().last().message.content)
     }
 
     //TODO use the assertIs idiomatic matchers

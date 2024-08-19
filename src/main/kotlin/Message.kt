@@ -23,6 +23,10 @@ data class Messages(val received: List<ReceivedMessage> = emptyList(), val sent:
         )
     }
 
+    fun received(message: ReceivedMessage): Messages {
+        return this.copy(received = received + message)
+    }
+
     fun toSend(message: Message): Messages {
         return this.copy(toSend = toSend + message)
     }
