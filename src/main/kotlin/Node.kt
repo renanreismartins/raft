@@ -4,17 +4,7 @@ package org.example
 data class Config(val electionTimeout: Int = 5, val heartbeatTimeout: Int = 2)
 
 sealed class Address(open val host: String, open val port: Int)
-data class Source(override val host: String, override val port: Int) : Address(host, port) {
-    companion object {
-        fun from(dest: Destination) : Source {
-            return Source(dest.host, dest.port)
-        }
-
-        fun from(dest: List<Destination>) : List<Source> {
-            return dest.map { it -> Source(it.host, it.port) }
-        }
-    }
-}
+data class Source(override val host: String, override val port: Int) : Address(host, port)
 data class Destination(override val host: String, override val port: Int) : Address(host, port) {
     companion object {
         fun from(src: Address) : Destination {
