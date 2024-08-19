@@ -30,16 +30,16 @@ data class Leader(
         }
 
         val nodesWeHaveSentMessagesTo =
-            // TODO: Remember the buffer! The OR can be replaced with appending the buffer content
+            // TODO: encapsulate? also add election term in the future
             node.sent()
-                .filter { it.sentAt > network.clock - config.heartbeatTimeout || it.sentAt == network.clock }
-                .map { it.message.dest }
+                .filter { it.sentAt > network.clock - config.heartbeatTimeout }
+                .map { it.message.dest } +
+                    node.messages.toSend.map { it.dest }
 
         val nodesWeNeedToSendHeartbeatTo = peers.toSet() - nodesWeHaveSentMessagesTo.toSet()
-
         val heartbeats = nodesWeNeedToSendHeartbeatTo.map { Heartbeat(address, it, "0") }
 
-        return node.add(*heartbeats.map { SentMessage(it, network.clock) }.toTypedArray())
+        return node.toSend(heartbeats)
     }
 
     //TODO It seems the 'received =' can be removed as Kotlin can infer the type

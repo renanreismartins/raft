@@ -31,7 +31,24 @@ data class Destination(override val host: String, override val port: Int) : Addr
 typealias Timestamp = Int //TODO Make this a Comparable, so when we change it to a 'Date' type for the real world, we do not need to change the usages
 
 // TODO: Make a map <Destination, List<ReceivedMessage>> for the received
-data class Messages(val received: List<ReceivedMessage> = emptyList(), val sent: List<SentMessage> = emptyList(), val toSend: List<Message> = emptyList())
+data class Messages(val received: List<ReceivedMessage> = emptyList(), val sent: List<SentMessage> = emptyList(), val toSend: List<Message> = emptyList()) {
+    //TODO is flush the best name to represent this operation
+    //TODO After this change, do we still need the extension methods Message.toSent() and toReceived?
+    fun flush(sentAt: Int): Messages {
+        return this.copy(
+            sent = sent + toSend.map { SentMessage(it, sentAt) },
+            toSend = emptyList()
+        )
+    }
+
+    fun toSend(message: Message): Messages {
+        return this.copy(toSend = toSend + message)
+    }
+
+    fun toSend(newMessages: List<Message>): Messages {
+        return this.copy(toSend = toSend + newMessages)
+    }
+}
 data class SentMessage(val message: Message, val sentAt: Timestamp)
 data class ReceivedMessage(val message: Message, val receivedAt: Timestamp)
 
@@ -59,10 +76,17 @@ sealed class Node(
 
     fun tick(): Node {
         val node = tickWithoutSideEffects()
-        // TODO: All 'pending' messages are also added to the sent list, but we haven't sent them yet.
-        // instead, we should add a 'buffer' on the Node, which gets added to in process/handleMessage and then flushed here
-        node.sent().filter { it.sentAt == network.clock }.forEach { send(it.message) }
-        return node
+        node.messages.toSend.forEach { send(it) } // TODO encapsulate access to messages?
+        return node.flushMessages()
+    }
+
+
+    private fun flushMessages(): Node {
+        return when (this) {
+            is Follower -> this.copy(messages = messages.flush(network.clock) )
+            is Candidate -> this.copy(messages = messages.flush(network.clock) )
+            is Leader -> this.copy(messages = messages.flush(network.clock) )
+        }
     }
 
     abstract fun tickWithoutSideEffects(): Node
@@ -77,6 +101,21 @@ sealed class Node(
     // as in node.add(*heartbeats.map { SentMessage(it, network.clock) }.toTypedArray())
     abstract fun add(vararg message: SentMessage): Node
     abstract fun add(vararg message: ReceivedMessage): Node
+    fun toSend(message: Message): Node {
+        return when (this) {
+            is Follower -> this.copy(messages = messages.toSend(message) )
+            is Candidate -> this.copy(messages = messages.toSend(message) )
+            is Leader -> this.copy(messages = messages.toSend(message) )
+        }
+    }
+
+    fun toSend(newMessages: List<Message>): Node {
+        return when (this) {
+            is Follower -> this.copy(messages = messages.toSend(newMessages) )
+            is Candidate -> this.copy(messages = messages.toSend(newMessages) )
+            is Leader -> this.copy(messages = messages.toSend(newMessages) )
+        }
+    }
 
     fun send(message: Message) {
         network.add(message)

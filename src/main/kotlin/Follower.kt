@@ -15,8 +15,8 @@ data class Follower(
             is Heartbeat -> (this.copy(state = state + message.content.toInt()))
             is RequestForVotes -> {
                 // TODO: BUFFER instead of filter!
-                if (shouldVote(sent().filter { it.sentAt == network.clock }.map { it.message })) {
-                    add(VoteFromFollower(address, Destination.from(message.src), "VOTE FROM FOLLOWER").toSent())
+                if (shouldVote()) {
+                    toSend(VoteFromFollower(address, Destination.from(message.src), "VOTE FROM FOLLOWER"))
                 } else {
                     this
                 }
@@ -37,8 +37,7 @@ data class Follower(
             // TODO when creating a candidate (promoting a follower), add a 'VoteFromFollower' from self to received messageLog. Move this to a Candidate constructor that takes a Follower
             val candidate = node.promote()
             val requestForVotes = peers.map { peer -> RequestForVotes(this.address, peer, "REQUEST FOR VOTES") }
-
-            return candidate.add(*requestForVotes.map { SentMessage(it, network.clock) }.toTypedArray())
+            return candidate.toSend(requestForVotes)
         }
 
         return node
@@ -58,8 +57,9 @@ data class Follower(
     }
 
     //TODO unit test
-    fun shouldVote(tickMessages: List<Message>): Boolean {
-        return (sent() + tickMessages).filterIsInstance<VoteFromFollower>().isEmpty()
+    //TODO consider the election term instead of all the sent messages
+    fun shouldVote(): Boolean {
+        return (sent() + messages.toSend).filterIsInstance<VoteFromFollower>().isEmpty()
     }
 
     //TODO It seems the 'received =' can be removed as Kotlin can infer the type

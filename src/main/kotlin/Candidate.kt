@@ -21,7 +21,7 @@ data class Candidate(
             is VoteFromFollower -> {
                 if (shouldBecomeLeader()) {
                     val heartbeats = peers.map { peer -> Heartbeat(address, peer, "0") }
-                    return promote().add(*heartbeats.map { it.toSent() }.toTypedArray())
+                    return promote().toSend(heartbeats)
                 }
                 return this
             }
