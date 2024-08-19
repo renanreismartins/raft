@@ -1,19 +1,20 @@
-import org.example.Destination
 import org.example.Follower
 import org.example.Network
 import org.example.NetworkMessage
 import org.example.RequestForVotes
 import org.example.SentMessage
-import org.example.Source
 import org.example.TimeMachine
 import org.example.VoteFromFollower
+import org.example.Destination
+import org.example.Source
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 class FollowerTest {
     @Test
     fun `After receiving Request For Votes from more than one candidate, respond with a Vote to only one of them`() {
-        val network = Network(mapOf(Source("host", 1) to listOf(
+        val network = Network(mapOf(
+            Source("host", 1) to listOf(
             NetworkMessage(RequestForVotes(Source("host", 2), Destination("host", 1), "REQUEST FOR VOTES"), 0),
             NetworkMessage(RequestForVotes(Source("host", 3), Destination("host", 1), "REQUEST FOR VOTES"), 0)
         )))

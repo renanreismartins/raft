@@ -1,6 +1,5 @@
 package usecases
 
-import org.example.Destination
 import org.example.Follower
 import org.example.Heartbeat
 import org.example.Leader
@@ -8,8 +7,9 @@ import org.example.Messages
 import org.example.Network
 import org.example.ReceivedMessage
 import org.example.SentMessage
-import org.example.Source
 import org.example.TimeMachine
+import org.example.Destination
+import org.example.Source
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 

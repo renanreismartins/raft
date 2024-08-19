@@ -3,21 +3,6 @@ package org.example
 // TODO: Figure out a good type for this when we start cleaning
 data class Config(val electionTimeout: Int = 5, val heartbeatTimeout: Int = 2)
 
-sealed class Address(open val host: String, open val port: Int)
-data class Source(override val host: String, override val port: Int) : Address(host, port)
-data class Destination(override val host: String, override val port: Int) : Address(host, port) {
-    companion object {
-        fun from(src: Address) : Destination {
-            return Destination(src.host, src.port)
-        }
-
-        fun from(src: List<Source>) : List<Destination> {
-            return src.map { it -> Destination(it.host, it.port) }
-        }
-    }
-}
-
-
 typealias Timestamp = Int //TODO Make this a Comparable, so when we change it to a 'Date' type for the real world, we do not need to change the usages
 
 // TODO: Make a map <Destination, List<ReceivedMessage>> for the received

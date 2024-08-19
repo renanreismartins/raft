@@ -1,9 +1,9 @@
 import org.example.Candidate
 import org.example.Config
-import org.example.Destination
 import org.example.Follower
 import org.example.Heartbeat
 import org.example.Network
+import org.example.Destination
 import org.example.Source
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals

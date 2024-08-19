@@ -1,10 +1,9 @@
-import org.example.Address
 import org.example.Candidate
-import org.example.Destination
 import org.example.Network
 import org.example.ReceivedMessage
-import org.example.Source
 import org.example.VoteFromFollower
+import org.example.Destination
+import org.example.Source
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test

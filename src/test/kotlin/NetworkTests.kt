@@ -1,8 +1,8 @@
-import org.example.Address
-import org.example.Destination
 import org.example.Heartbeat
 import org.example.Network
 import org.example.NetworkMessage
+import org.example.Address
+import org.example.Destination
 import org.example.Source
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
