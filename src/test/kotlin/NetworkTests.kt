@@ -16,8 +16,8 @@ class NetworkTests {
         val destination = Destination("127.0.0.1", 8001)
         val initialMessages = mapOf<Address, List<NetworkMessage>>(
             destination to listOf(
-                NetworkMessage(Heartbeat(source, destination, "A"), 1),
-                NetworkMessage(Heartbeat(source, destination, "A"), 2)
+                NetworkMessage(Heartbeat(source, destination, 0, "A"), 1),
+                NetworkMessage(Heartbeat(source, destination, 0, "A"), 2)
             )
         )
         val network = Network(initialMessages)
@@ -28,7 +28,7 @@ class NetworkTests {
 
         // Then
         assertEquals(1, receivedMessages.size)
-        assertEquals(Heartbeat(source, destination, "A"), receivedMessages.first());
+        assertEquals(Heartbeat(source, destination, 0, "A"), receivedMessages.first());
     }
 
     @Test
@@ -38,8 +38,8 @@ class NetworkTests {
         val destination = Destination("127.0.0.1", 8001)
         val initialMessages = mapOf<Address, List<NetworkMessage>>(
             destination to listOf(
-                NetworkMessage(Heartbeat(source, destination, "A"), 1),
-                NetworkMessage(Heartbeat(source, destination, "B"), 2)
+                NetworkMessage(Heartbeat(source, destination, 0, "A"), 1),
+                NetworkMessage(Heartbeat(source, destination, 0, "B"), 2)
             )
         )
         val network = Network(initialMessages)
@@ -52,8 +52,8 @@ class NetworkTests {
 
         // Then
         assertEquals(2, receivedMessages.size)
-        assertEquals(Heartbeat(source, destination, "A"), receivedMessages.first())
-        assertEquals(Heartbeat(source, destination, "B"), receivedMessages.last())
+        assertEquals(Heartbeat(source, destination, 0, "A"), receivedMessages.first())
+        assertEquals(Heartbeat(source, destination, 0, "B"), receivedMessages.last())
     }
 
     @Test
@@ -65,7 +65,7 @@ class NetworkTests {
         val network = Network()
         network.tick()
 
-        network.add(Heartbeat(source, destination, "A"), 0)
+        network.add(Heartbeat(source, destination, 0, "A"), 0)
         network.tick()
 
         // When
@@ -73,7 +73,7 @@ class NetworkTests {
 
         // Then
         assertEquals(1, received.size)
-        assertEquals(Heartbeat(source, destination, "A"), received.first())
+        assertEquals(Heartbeat(source, destination, 0, "A"), received.first())
     }
 
     @Test
@@ -83,8 +83,8 @@ class NetworkTests {
         val destination = Destination("127.0.0.1", 8001)
 
         val network = Network()
-        network.add(Heartbeat(source, destination, "A"), 0)
-        network.add(Heartbeat(source, destination, "B"), 0)
+        network.add(Heartbeat(source, destination, 0, "A"), 0)
+        network.add(Heartbeat(source, destination, 0, "B"), 0)
         network.tick()
         network.tick()
 
@@ -93,7 +93,7 @@ class NetworkTests {
 
         // Then
         assertEquals(2, received.size)
-        assertEquals(Heartbeat(source, destination, "A"), received.first())
-        assertEquals(Heartbeat(source, destination, "B"), received.last())
+        assertEquals(Heartbeat(source, destination, 0, "A"), received.first())
+        assertEquals(Heartbeat(source, destination, 0, "B"), received.last())
     }
 }

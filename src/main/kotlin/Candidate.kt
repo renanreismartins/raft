@@ -7,6 +7,7 @@ data class Candidate(
     override val network: Network,
     override val peers: List<Destination>,
     override val messages: Messages = Messages(),
+    override val term: Int = 0,
     override val config: Config = Config(),
 ): Node(address, name, state, network, peers) {
 
@@ -20,7 +21,7 @@ data class Candidate(
             is RequestForVotes -> this
             is VoteFromFollower -> {
                 if (shouldBecomeLeader()) {
-                    val heartbeats = peers.map { peer -> Heartbeat(address, peer, "0") }
+                    val heartbeats = peers.map { peer -> Heartbeat(address, peer, term, "0") }
                     return promote().toSend(heartbeats)
                 }
                 return this
@@ -55,10 +56,10 @@ data class Candidate(
     override fun add(vararg message: SentMessage): Candidate = this.copy(messages = messages.copy(sent = sent() + message))
 
     private fun promote(): Leader {
-        return Leader(this.address, this.name, this.state, this.network, this.peers, this.messages, this.config)
+        return Leader(this.address, this.name, this.state, this.network, this.peers, this.messages, this.term, this.config)
     }
 
     private fun demote(): Follower {
-        return Follower(this.address, this.name, this.state, this.network, this.peers, this.messages, this.config)
+        return Follower(this.address, this.name, this.state, this.network, this.peers, this.messages, this.term, this.config)
     }
 }

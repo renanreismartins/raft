@@ -5,22 +5,26 @@ typealias Timestamp = Int //TODO Make this a Comparable, so when we change it to
 //TODO remove 'content' from the Message and add it to the subclasses if we have one type of Message without 'content'
 sealed class Message(open val src: Source,
                      open val dest: Destination,
+                     open val term: Int = 0,
                      open val content: String)
 
 data class RequestForVotes(override val src: Source,
                            override val dest: Destination,
+                           override val term: Int = 0,
                            override val content: String
-) : Message(src, dest, content)
+) : Message(src, dest, term, content)
 
 data class VoteFromFollower(override val src: Source,
                             override val dest: Destination,
+                            override val term: Int = 0,
                             override val content: String
-) : Message(src, dest, content)
+) : Message(src, dest, term, content)
 
 data class Heartbeat(override val src: Source,
                      override val dest: Destination,
+                     override val term: Int = 0,
                      override val content: String
-) : Message(src, dest, content)
+) : Message(src, dest, term, content)
 
 data class SentMessage(val message: Message, val sentAt: Timestamp)
 data class ReceivedMessage(val message: Message, val receivedAt: Timestamp)

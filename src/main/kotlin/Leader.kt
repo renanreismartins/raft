@@ -11,6 +11,7 @@ data class Leader(
     override val network: Network,
     override val peers: List<Destination>,
     override val messages: Messages = Messages(),
+    override val term: Int = 0,
     override val config: Config = Config(),
 ): Node(address, name, state, network, peers) {
 
@@ -37,7 +38,7 @@ data class Leader(
                     node.messages.toSend.map { it.dest }
 
         val nodesWeNeedToSendHeartbeatTo = peers.toSet() - nodesWeHaveSentMessagesTo.toSet()
-        val heartbeats = nodesWeNeedToSendHeartbeatTo.map { Heartbeat(address, it, "0") }
+        val heartbeats = nodesWeNeedToSendHeartbeatTo.map { Heartbeat(address, it, term, "0") }
 
         return node.toSend(heartbeats)
     }

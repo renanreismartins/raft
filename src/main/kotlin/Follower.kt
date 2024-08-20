@@ -7,6 +7,7 @@ data class Follower(
     override val network: Network,
     override val peers: List<Destination>,
     override val messages: Messages = Messages(),
+    override val term: Int = 0,
     override val config: Config = Config(),
 ): Node(address, name, state, network, peers) {
 
@@ -15,7 +16,7 @@ data class Follower(
             is Heartbeat -> (this.copy(state = state + message.content.toInt()))
             is RequestForVotes -> {
                 if (shouldVote()) {
-                    toSend(VoteFromFollower(address, Destination.from(message.src), "VOTE FROM FOLLOWER"))
+                    toSend(VoteFromFollower(address, Destination.from(message.src), term, "VOTE FROM FOLLOWER"))
                 } else {
                     this
                 }
@@ -63,9 +64,9 @@ data class Follower(
     override fun add(vararg message: ReceivedMessage): Follower = this.copy(messages = messages.copy(received = received() + message))
 
     private fun promote(): Candidate {
-        val requestForVotes = peers.map { peer -> RequestForVotes(this.address, peer, "REQUEST FOR VOTES") }
+        val requestForVotes = peers.map { peer -> RequestForVotes(this.address, peer, term, "REQUEST FOR VOTES") }
         val messages = this.messages
-            .received(VoteFromFollower(this.address, Destination.from(this.address), "Vote from self").toReceived())
+            .received(VoteFromFollower(this.address, Destination.from(this.address), term, "Vote from self").toReceived())
             .toSend(requestForVotes)
 
         return Candidate(this.address, this.name, this.state, this.network, this.peers, messages)

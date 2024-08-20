@@ -21,7 +21,7 @@ class NodeTests {
         val nodeA = Follower(Source("127.0.0.1", 9001), "NodeA", network = network, peers = listOf(Destination.from(nodeBAddress)))
 
         // When
-        nodeA.send(Heartbeat(nodeA.address, Destination.from(nodeB.address), "1"))
+        nodeA.send(Heartbeat(nodeA.address, Destination.from(nodeB.address), 0, "1"))
         network.tick()
         val newNodeB = nodeB.tick()
 
