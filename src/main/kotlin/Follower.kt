@@ -63,13 +63,14 @@ data class Follower(
     override fun add(vararg message: SentMessage): Follower = this.copy(messages = messages.copy(sent = sent() + message))
     override fun add(vararg message: ReceivedMessage): Follower = this.copy(messages = messages.copy(received = received() + message))
 
+    //todo unit test, test the messages state and the term
     private fun promote(): Candidate {
         val requestForVotes = peers.map { peer -> RequestForVotes(this.address, peer, term, "REQUEST FOR VOTES") }
         val messages = this.messages
             .received(VoteFromFollower(this.address, Destination.from(this.address), term, "Vote from self").toReceived())
             .toSend(requestForVotes)
 
-        return Candidate(this.address, this.name, this.state, this.network, this.peers, messages)
+        return Candidate(this.address, this.name, this.state, this.network, this.peers, messages, this.term + 1)
     }
 
 }
