@@ -9,6 +9,7 @@ data class Candidate(
     override val messages: Messages = Messages(),
     override val term: Int = 0,
     override val config: Config = Config(),
+    val termStartedAt: Int = network.clock + 1
 ): Node(address, name, state, network, peers) {
 
     // TODO Make process return Node, so we have finer control over how we handle each message
@@ -17,7 +18,12 @@ data class Candidate(
 
     override fun handleMessage(message: Message): Node {
         return when(message) {
-            is Heartbeat -> copy(state = (state + message.content.toInt())).demote()
+            is Heartbeat -> {
+                if (message.term < term) {
+                    return this
+                }
+                return copy(state = (state + message.content.toInt())).demote()
+            }
             is RequestForVotes -> this
             is VoteFromFollower -> {
                 if (shouldBecomeLeader()) {
@@ -33,9 +39,18 @@ data class Candidate(
         //TODO We have this common logic in the Follower, move it to Node
         val tickMessages = network.get(this.address)
 
-        return tickMessages.fold(this as Node) { node, msg ->
+        val newNode = tickMessages.fold(this as Node) { node, msg ->
             node.process(msg)
         }
+
+        if (newNode is Candidate && newNode.hasReachedElectionTimeout()) {
+            return Candidate(this.address, this.name, this.state, this.network, this.peers, messages, this.term + 1)
+        }
+        return newNode
+    }
+
+    fun hasReachedElectionTimeout(): Boolean {
+        return network.clock - termStartedAt >= config.electionTimeout
     }
 
     fun shouldBecomeLeader(): Boolean {

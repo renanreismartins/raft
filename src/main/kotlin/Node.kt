@@ -1,6 +1,7 @@
 package org.example
 
 // TODO: Figure out a good type for this when we start cleaning
+// TODO: Add this to all the tests, we should use 'random' values
 data class Config(val electionTimeout: Int = 5, val heartbeatTimeout: Int = 2)
 
 sealed class Node(
