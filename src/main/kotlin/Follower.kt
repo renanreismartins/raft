@@ -22,6 +22,8 @@ data class Follower(
                 }
             }
             is VoteFromFollower -> this
+            is ClientCommand -> this
+            is AppendEntry -> this
         }
     }
 

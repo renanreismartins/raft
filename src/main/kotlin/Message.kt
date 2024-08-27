@@ -26,6 +26,19 @@ data class Heartbeat(override val src: Source,
                      override val content: String
 ) : Message(src, dest, term, content)
 
+//TODO should not know about the term
+data class ClientCommand(override val src: Source,
+                         override val dest: Destination,
+                         override val term: Int = 0,
+                         override val content: String
+) : Message(src, dest, term, content)
+
+data class AppendEntry(override val src: Source,
+                         override val dest: Destination,
+                         override val term: Int = 0,
+                         override val content: String
+) : Message(src, dest, term, content)
+
 data class SentMessage(val message: Message, val sentAt: Timestamp)
 data class ReceivedMessage(val message: Message, val receivedAt: Timestamp)
 

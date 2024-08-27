@@ -11,6 +11,7 @@ sealed class Node(
     open val network: Network,
     open val peers: List<Destination>,
     open val messages: Messages = Messages(),
+    open val log: List<Message> = emptyList(),
     open val term: Int = 0,
     open val config: Config = Config(),
 ) {

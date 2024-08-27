@@ -11,7 +11,8 @@ data class Leader(
     override val network: Network,
     override val peers: List<Destination>,
     override val messages: Messages = Messages(),
-    override val term: Int = 0,
+    override val log: List<Message> = emptyList(),
+    override val term: Int = 1,
     override val config: Config = Config(),
 ): Node(address, name, state, network, peers) {
 
@@ -20,7 +21,14 @@ data class Leader(
             is Heartbeat -> this.copy(state = state + message.content.toInt())
             is RequestForVotes -> this
             is VoteFromFollower -> this
+            //TODO ADR to explain our AppendEntries is AppendEntry - we decide to send one message per entry
+            is ClientCommand -> this.copy(log = log + message).toSend(message)
+            is AppendEntry -> this
         }
+    }
+
+    fun toSend(command: ClientCommand) : Node {
+        return this.toSend(peers.map { AppendEntry(this.address, it, this.term, command.content) })
     }
 
     override fun tickWithoutSideEffects(): Node {

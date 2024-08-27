@@ -32,6 +32,8 @@ data class Candidate(
                 }
                 return this
             }
+            is ClientCommand -> this
+            is AppendEntry -> this
         }
     }
 
@@ -71,7 +73,7 @@ data class Candidate(
     override fun add(vararg message: SentMessage): Candidate = this.copy(messages = messages.copy(sent = sent() + message))
 
     private fun promote(): Leader {
-        return Leader(this.address, this.name, this.state, this.network, this.peers, this.messages, this.term, this.config)
+        return Leader(this.address, this.name, this.state, this.network, this.peers, this.messages, this.log, this.term, this.config)
     }
 
     private fun demote(): Follower {
