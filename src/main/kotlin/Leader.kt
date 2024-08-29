@@ -14,7 +14,12 @@ data class Leader(
     override val log: List<Message> = emptyList(),
     override val term: Int = 1,
     override val config: Config = Config(),
+    override val commitIndex: Int = 0,
+    override val lastApplied: Int = 0,
+    val nextIndex: Map<Destination, Int> = peers.associateWith { log.size },
+    val matchIndex: Map<Destination, Int> = peers.associateWith { 0 },
 ): Node(address, name, state, network, peers) {
+
 
     override fun handleMessage(message: Message): Node {
         return when(message) {

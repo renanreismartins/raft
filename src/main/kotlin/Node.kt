@@ -14,6 +14,8 @@ sealed class Node(
     open val log: List<Message> = emptyList(),
     open val term: Int = 0,
     open val config: Config = Config(),
+    open val commitIndex: Int = 0,
+    open val lastApplied: Int = 0,
 ) {
     fun tick(ticks: Int): Node {
         return (0 .. ticks).fold(this) { acc, _ -> acc.tick() }

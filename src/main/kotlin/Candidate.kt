@@ -9,6 +9,8 @@ data class Candidate(
     override val messages: Messages = Messages(),
     override val term: Int = 0,
     override val config: Config = Config(),
+    override val commitIndex: Int = 0,
+    override val lastApplied: Int = 0,
     val termStartedAt: Int = network.clock + 1
 ): Node(address, name, state, network, peers) {
 
@@ -73,10 +75,10 @@ data class Candidate(
     override fun add(vararg message: SentMessage): Candidate = this.copy(messages = messages.copy(sent = sent() + message))
 
     private fun promote(): Leader {
-        return Leader(this.address, this.name, this.state, this.network, this.peers, this.messages, this.log, this.term, this.config)
+        return Leader(this.address, this.name, this.state, this.network, this.peers, this.messages, this.log, this.term, this.config, lastApplied = this.lastApplied, commitIndex = this.commitIndex)
     }
 
     private fun demote(): Follower {
-        return Follower(this.address, this.name, this.state, this.network, this.peers, this.messages, this.term, this.config)
+        return Follower(this.address, this.name, this.state, this.network, this.peers, this.messages, this.term, this.config, lastApplied = this.lastApplied, commitIndex = this.commitIndex)
     }
 }

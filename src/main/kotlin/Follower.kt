@@ -9,6 +9,8 @@ data class Follower(
     override val messages: Messages = Messages(),
     override val term: Int = 0,
     override val config: Config = Config(),
+    override val commitIndex: Int = 0,
+    override val lastApplied: Int = 0,
 ): Node(address, name, state, network, peers) {
 
     override fun handleMessage(message: Message): Node {
@@ -72,7 +74,7 @@ data class Follower(
             .received(VoteFromFollower(this.address, Destination.from(this.address), term, "Vote from self").toReceived())
             .toSend(requestForVotes)
 
-        return Candidate(this.address, this.name, this.state, this.network, this.peers, messages, this.term + 1)
+        return Candidate(this.address, this.name, this.state, this.network, this.peers, messages, this.term + 1, lastApplied = this.lastApplied, commitIndex = this.commitIndex)
     }
 
 }
