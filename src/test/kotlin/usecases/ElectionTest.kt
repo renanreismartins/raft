@@ -91,8 +91,8 @@ class ElectionTest {
         val (_, _, follower1, follower2) = timeMachine.tick()
         // Candidate has been demoted to Follower
         assertIs<Follower>(follower1)
-        assertEquals(Heartbeat(willBecomeLeaderAddress, Destination.from(follower1.address), 0, "0"), follower1.received().last().message)
-        assertEquals(Heartbeat(willBecomeLeaderAddress, Destination.from(follower2.address), 0, "0"), follower2.received().last().message)
+        assertEquals(Heartbeat(willBecomeLeaderAddress, Destination.from(follower1.address), 1, "0"), follower1.received().last().message)
+        assertEquals(Heartbeat(willBecomeLeaderAddress, Destination.from(follower2.address), 1, "0"), follower2.received().last().message)
     }
 
 }
