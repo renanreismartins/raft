@@ -1,5 +1,6 @@
 package usecases
 
+import org.example.AppendEntryResponse
 import org.example.ClientCommand
 import org.example.Destination
 import org.example.Follower
@@ -44,10 +45,22 @@ class StateReplication {
 
         network.add(ClientCommand(Source("127.0.0.1", 9999), Destination.from(leaderAddress), 1, "client command"))
 
-        val timeMachine = TimeMachine(network, leader, follower1, follower2)
-        val (_, newLeader, newFollower1, newFollower2) =  timeMachine.tick(2)
+        val timeMachine = TimeMachine(network, leader, follower1, follower2).tick(2)
+        val (_, newLeader, newFollower1, newFollower2) = timeMachine
 
         assertEquals(1, newFollower1.messages.received.size)
+        assertEquals(1, newFollower1.log.size)
+
+        // TODO: TimeMachine is immutable, which means we can't keep ticking the initial instance, which is inconvenient for big tests. Refactor.
+        val (_, newLeader2, _, _) = timeMachine.tick()
+
+        /**
+         * Leader should have received 3 messages
+         *  1. ClientCommand
+         *  2 & 3. AppendStateResponse from both Followers
+         */
+        assertEquals(3, newLeader2.messages.received.size)
+        assertEquals(2, newLeader2.messages.received.filter { it.message is AppendEntryResponse }.size)
     }
 
 }

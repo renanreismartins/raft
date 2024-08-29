@@ -24,9 +24,18 @@ data class Follower(
                     this
                 }
             }
+            is AppendEntry -> this.copy(log = log + message).toSend(
+                AppendEntryResponse(
+                    src = this.address,
+                    dest = Destination.from(message.src),
+                    content = "",
+                    term = this.term,
+                    success = true
+                )
+            )
             is VoteFromFollower -> this
             is ClientCommand -> this
-            is AppendEntry -> this
+            is AppendEntryResponse -> this
         }
     }
 

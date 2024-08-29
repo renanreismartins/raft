@@ -29,6 +29,7 @@ data class Leader(
             //TODO ADR to explain our AppendEntries is AppendEntry - we decide to send one message per entry
             is ClientCommand -> this.copy(log = log + message).toSend(message)
             is AppendEntry -> this
+            is AppendEntryResponse -> this
         }
     }
 

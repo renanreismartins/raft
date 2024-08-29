@@ -37,6 +37,7 @@ data class Candidate(
             }
             is ClientCommand -> this
             is AppendEntry -> this
+            is AppendEntryResponse -> this
         }
     }
 
