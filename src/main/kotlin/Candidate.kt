@@ -7,6 +7,7 @@ data class Candidate(
     override val network: Network,
     override val peers: List<Destination>,
     override val messages: Messages = Messages(),
+    override val log: List<Message> = emptyList(),
     override val term: Int = 0,
     override val config: Config = Config(),
     override val commitIndex: Int = 0,
@@ -48,7 +49,7 @@ data class Candidate(
         }
 
         if (newNode is Candidate && newNode.hasReachedElectionTimeout()) {
-            return Candidate(this.address, this.name, this.state, this.network, this.peers, messages, this.term + 1)
+            return Candidate(this.address, this.name, this.state, this.network, this.peers, messages, this.log, this.term + 1)
         }
         return newNode
     }
@@ -79,6 +80,6 @@ data class Candidate(
     }
 
     private fun demote(): Follower {
-        return Follower(this.address, this.name, this.state, this.network, this.peers, this.messages, this.term, this.config, lastApplied = this.lastApplied, commitIndex = this.commitIndex)
+        return Follower(this.address, this.name, this.state, this.network, this.peers, this.messages, this.log, this.term, this.config, lastApplied = this.lastApplied, commitIndex = this.commitIndex)
     }
 }

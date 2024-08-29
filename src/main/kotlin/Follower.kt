@@ -7,6 +7,7 @@ data class Follower(
     override val network: Network,
     override val peers: List<Destination>,
     override val messages: Messages = Messages(),
+    override val log: List<Message> = emptyList(),
     override val term: Int = 0,
     override val config: Config = Config(),
     override val commitIndex: Int = 0,
@@ -74,7 +75,7 @@ data class Follower(
             .received(VoteFromFollower(this.address, Destination.from(this.address), term, "Vote from self").toReceived())
             .toSend(requestForVotes)
 
-        return Candidate(this.address, this.name, this.state, this.network, this.peers, messages, this.term + 1, lastApplied = this.lastApplied, commitIndex = this.commitIndex)
+        return Candidate(this.address, this.name, this.state, this.network, this.peers, messages, this.log, this.term + 1, lastApplied = this.lastApplied, commitIndex = this.commitIndex)
     }
 
 }
