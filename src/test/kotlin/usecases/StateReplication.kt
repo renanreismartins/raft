@@ -48,6 +48,7 @@ class StateReplication {
         val timeMachine = TimeMachine(network, leader, follower1, follower2).tick(2)
         val (_, newLeader, newFollower1, newFollower2) = timeMachine
 
+        assertEquals(1, newLeader.commitIndex)
         assertEquals(1, newFollower1.messages.received.size)
         assertEquals(1, newFollower1.log.size)
 

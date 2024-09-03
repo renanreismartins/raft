@@ -35,8 +35,11 @@ data class ClientCommand(override val src: Source,
 
 data class AppendEntry(override val src: Source,
                          override val dest: Destination,
+                         override val content: String,
                          override val term: Int = 0,
-                         override val content: String
+                         val prevLogIndex: Int,
+                         val prevLogTerm: Int,
+                         val leaderCommit: Int,
 ) : Message(src, dest, term, content)
 
 data class AppendEntryResponse(override val src: Source,

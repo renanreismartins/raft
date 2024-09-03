@@ -20,21 +20,32 @@ data class Leader(
     val matchIndex: Map<Destination, Int> = peers.associateWith { 0 },
 ): Node(address, name, state, network, peers) {
 
-
     override fun handleMessage(message: Message): Node {
         return when(message) {
             is Heartbeat -> this.copy(state = state + message.content.toInt())
             is RequestForVotes -> this
             is VoteFromFollower -> this
             //TODO ADR to explain our AppendEntries is AppendEntry - we decide to send one message per entry
-            is ClientCommand -> this.copy(log = log + message).toSend(message)
+            //TODO when adding to the log, should we increase the commitIndex?
+            is ClientCommand -> this.copy(log = log + message, commitIndex = this.commitIndex + 1).toSend(message)
             is AppendEntry -> this
             is AppendEntryResponse -> this
         }
     }
 
     fun toSend(command: ClientCommand) : Node {
-        return this.toSend(peers.map { AppendEntry(this.address, it, this.term, command.content) })
+        /*
+        TODO prevLogIndex = index of log entry immediately preceding new ones
+        The log.size - 1 is the index of the new entry (just added by this command)
+        The log.size - 2 is the index of the entries preceding the log just added
+        Maybe it worth encapsulate the log in its own class so we can avoid the magic numbers
+         */
+        return this.toSend(peers.map {
+            //TODO unit test when moving to the Log class
+            val prevLogIndex = if (log.size - 2 <= 0) 0 else log.size - 2
+            val prevLogTerm = if (prevLogIndex <= 0) this.term else log.get(log.size - 2).term
+
+            AppendEntry(this.address, it, command.content, this.term, prevLogIndex, prevLogTerm, this.commitIndex) })
     }
 
     override fun tickWithoutSideEffects(): Node {
