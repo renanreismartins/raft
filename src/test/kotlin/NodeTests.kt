@@ -1,9 +1,9 @@
 import org.example.Candidate
 import org.example.Config
+import org.example.Destination
 import org.example.Follower
 import org.example.Heartbeat
 import org.example.Network
-import org.example.Destination
 import org.example.Source
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
@@ -33,7 +33,8 @@ class NodeTests {
     fun `Follower becomes a Candidate if it does not receive a heartbeat before the election timeout (3 ticks)`() {
         // Given
         val network = Network()
-        val follower = Follower(Source("127.0.0.1", 9001), "NodeA", network = network, peers = emptyList(), config = Config(electionTimeout = 3))
+        val follower =
+            Follower(Source("127.0.0.1", 9001), "NodeA", network = network, peers = emptyList(), config = Config(electionTimeout = 3))
 
         // When
         network.tick()
@@ -57,7 +58,14 @@ class NodeTests {
         // Given
         val network = Network()
         val destination = Destination("127.0.0.1", 9002)
-        val follower = Follower(Source("127.0.0.1", 9001), "NodeA", network = network, peers = listOf(destination), config = Config(electionTimeout = 3))
+        val follower =
+            Follower(
+                Source("127.0.0.1", 9001),
+                "NodeA",
+                network = network,
+                peers = listOf(destination),
+                config = Config(electionTimeout = 3),
+            )
 
         // When
         network.tick()

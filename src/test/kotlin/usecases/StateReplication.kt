@@ -12,36 +12,36 @@ import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
 class StateReplication {
-
     @Test
     fun `A leader replicates its state for all the followers`() {
         val network = Network()
 
         val follower1Address = Source("127.0.0.1", 9002)
-        val follower1 = Follower(
-            follower1Address,
-            "FollowerWithoutCommunication",
-            network = network,
-            peers = listOf(),
-        )
-
+        val follower1 =
+            Follower(
+                follower1Address,
+                "FollowerWithoutCommunication",
+                network = network,
+                peers = listOf(),
+            )
 
         val follower2Address = Source("127.0.0.1", 9003)
-        val follower2 = Follower(
-            follower2Address,
-            "FollowerWithCommunication",
-            network = network,
-            peers = listOf(),
-        )
-
+        val follower2 =
+            Follower(
+                follower2Address,
+                "FollowerWithCommunication",
+                network = network,
+                peers = listOf(),
+            )
 
         val leaderAddress = Source("127.0.0.1", 9001)
-        val leader = Leader(
-            leaderAddress,
-            "Leader",
-            peers = listOf(Destination.from(follower2Address), Destination.from(follower1Address)),
-            network = network,
-        )
+        val leader =
+            Leader(
+                leaderAddress,
+                "Leader",
+                peers = listOf(Destination.from(follower2Address), Destination.from(follower1Address)),
+                network = network,
+            )
 
         network.add(ClientCommand(Source("127.0.0.1", 9999), Destination.from(leaderAddress), 1, "client command"))
 
@@ -63,5 +63,4 @@ class StateReplication {
         assertEquals(3, newLeader2.messages.received.size)
         assertEquals(2, newLeader2.messages.received.filter { it.message is AppendEntryResponse }.size)
     }
-
 }

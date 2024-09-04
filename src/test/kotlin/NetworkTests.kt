@@ -1,25 +1,26 @@
+import org.example.Address
+import org.example.Destination
 import org.example.Heartbeat
 import org.example.Network
 import org.example.NetworkMessage
-import org.example.Address
-import org.example.Destination
 import org.example.Source
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
 class NetworkTests {
-
     @Test
     fun `Given a message, delivers it when the network tick matches the deliver time`() {
         // Given
         val source = Source("127.0.0.1", 8000)
         val destination = Destination("127.0.0.1", 8001)
-        val initialMessages = mapOf<Address, List<NetworkMessage>>(
-            destination to listOf(
-                NetworkMessage(Heartbeat(source, destination, 0, "A"), 1),
-                NetworkMessage(Heartbeat(source, destination, 0, "A"), 2)
+        val initialMessages =
+            mapOf<Address, List<NetworkMessage>>(
+                destination to
+                    listOf(
+                        NetworkMessage(Heartbeat(source, destination, 0, "A"), 1),
+                        NetworkMessage(Heartbeat(source, destination, 0, "A"), 2),
+                    ),
             )
-        )
         val network = Network(initialMessages)
 
         // When
@@ -28,7 +29,7 @@ class NetworkTests {
 
         // Then
         assertEquals(1, receivedMessages.size)
-        assertEquals(Heartbeat(source, destination, 0, "A"), receivedMessages.first());
+        assertEquals(Heartbeat(source, destination, 0, "A"), receivedMessages.first())
     }
 
     @Test
@@ -36,12 +37,14 @@ class NetworkTests {
         // Given
         val source = Source("127.0.0.1", 8000)
         val destination = Destination("127.0.0.1", 8001)
-        val initialMessages = mapOf<Address, List<NetworkMessage>>(
-            destination to listOf(
-                NetworkMessage(Heartbeat(source, destination, 0, "A"), 1),
-                NetworkMessage(Heartbeat(source, destination, 0, "B"), 2)
+        val initialMessages =
+            mapOf<Address, List<NetworkMessage>>(
+                destination to
+                    listOf(
+                        NetworkMessage(Heartbeat(source, destination, 0, "A"), 1),
+                        NetworkMessage(Heartbeat(source, destination, 0, "B"), 2),
+                    ),
             )
-        )
         val network = Network(initialMessages)
 
         // When
