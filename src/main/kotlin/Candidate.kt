@@ -12,15 +12,14 @@ data class Candidate(
     override val config: Config = Config(),
     override val commitIndex: Int = 0,
     override val lastApplied: Int = 0,
-    val termStartedAt: Int = network.clock + 1
-): Node(address, name, state, network, peers) {
-
+    val termStartedAt: Int = network.clock + 1,
+) : Node(address, name, state, network, peers) {
     // TODO Make process return Node, so we have finer control over how we handle each message
     //      e.g. If a Candidate receives a Heartbeat, it should demote to follower, this is difficult
     //      with the current architecture. This would allow us to remove methods to demote/promote
 
     override fun handleMessage(message: Message): Node {
-        return when(message) {
+        return when (message) {
             is Heartbeat -> {
                 if (message.term < term) {
                     return this
@@ -42,12 +41,13 @@ data class Candidate(
     }
 
     override fun tickWithoutSideEffects(): Node {
-        //TODO We have this common logic in the Follower, move it to Node
+        // TODO We have this common logic in the Follower, move it to Node
         val tickMessages = network.get(this.address)
 
-        val newNode = tickMessages.fold(this as Node) { node, msg ->
-            node.process(msg)
-        }
+        val newNode =
+            tickMessages.fold(this as Node) { node, msg ->
+                node.process(msg)
+            }
 
         if (newNode is Candidate && newNode.hasReachedElectionTimeout()) {
             return Candidate(this.address, this.name, this.state, this.network, this.peers, messages, this.log, this.term + 1)
@@ -55,32 +55,49 @@ data class Candidate(
         return newNode
     }
 
-    fun hasReachedElectionTimeout(): Boolean {
-        return network.clock - termStartedAt >= config.electionTimeout
-    }
+    fun hasReachedElectionTimeout(): Boolean = network.clock - termStartedAt >= config.electionTimeout
 
-    fun shouldBecomeLeader(): Boolean {
-        return received().count { m -> m.message is VoteFromFollower } > clusterSize() / 2
-    }
+    fun shouldBecomeLeader(): Boolean = received().count { m -> m.message is VoteFromFollower } > clusterSize() / 2
 
-    private fun clusterSize(): Int  {
-        return peers.size + 1
-    }
+    private fun clusterSize(): Int = peers.size + 1
 
-    //TODO MOVE TO NODE
+    // TODO MOVE TO NODE
     override fun receive(message: Message): Node {
         TODO("Not yet implemented")
     }
 
-    //TODO It seems the 'received =' can be removed as Kotlin can infer the type
+    // TODO It seems the 'received =' can be removed as Kotlin can infer the type
     override fun add(vararg message: ReceivedMessage): Candidate = this.copy(messages = messages.copy(received = received() + message))
+
     override fun add(vararg message: SentMessage): Candidate = this.copy(messages = messages.copy(sent = sent() + message))
 
-    private fun promote(): Leader {
-        return Leader(this.address, this.name, this.state, this.network, this.peers, this.messages, this.log, this.term, this.config, lastApplied = this.lastApplied, commitIndex = this.commitIndex)
-    }
+    private fun promote(): Leader =
+        Leader(
+            address = this.address,
+            this.name,
+            this.state,
+            this.network,
+            this.peers,
+            this.messages,
+            this.log,
+            this.term,
+            this.config,
+            lastApplied = this.lastApplied,
+            commitIndex = this.commitIndex,
+        )
 
-    private fun demote(): Follower {
-        return Follower(this.address, this.name, this.state, this.network, this.peers, this.messages, this.log, this.term, this.config, lastApplied = this.lastApplied, commitIndex = this.commitIndex)
-    }
+    private fun demote(): Follower =
+        Follower(
+            this.address,
+            this.name,
+            this.state,
+            this.network,
+            this.peers,
+            this.messages,
+            this.log,
+            this.term,
+            this.config,
+            lastApplied = this.lastApplied,
+            commitIndex = this.commitIndex,
+        )
 }

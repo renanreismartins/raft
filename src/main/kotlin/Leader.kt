@@ -1,7 +1,6 @@
 package org.example
 
-
-//TODO maybe we should make all the constructors except the Followe as private
+// TODO maybe we should make all the constructors except the Followe as private
 // this way all nodes can only be initialized as Follower and only transition to a new
 // state thought the state machine
 data class Leader(
@@ -18,49 +17,52 @@ data class Leader(
     override val lastApplied: Int = 0,
     val nextIndex: Map<Destination, Int> = peers.associateWith { log.size },
     val matchIndex: Map<Destination, Int> = peers.associateWith { 0 },
-): Node(address, name, state, network, peers) {
-
+) : Node(address, name, state, network, peers) {
     override fun handleMessage(message: Message): Node {
-        return when(message) {
+        return when (message) {
             is Heartbeat -> this.copy(state = state + message.content.toInt())
             is RequestForVotes -> this
             is VoteFromFollower -> this
-            //TODO ADR to explain our AppendEntries is AppendEntry - we decide to send one message per entry
-            //TODO when adding to the log, should we increase the commitIndex?
+            // TODO ADR to explain our AppendEntries is AppendEntry - we decide to send one message per entry
+            // TODO when adding to the log, should we increase the commitIndex?
             is ClientCommand -> this.copy(log = log + message, commitIndex = this.commitIndex + 1).toSend(message)
             is AppendEntry -> this
             is AppendEntryResponse -> this
         }
     }
 
-    fun toSend(command: ClientCommand) : Node {
+    fun toSend(command: ClientCommand): Node {
         /*
         TODO prevLogIndex = index of log entry immediately preceding new ones
         The log.size - 1 is the index of the new entry (just added by this command)
         The log.size - 2 is the index of the entries preceding the log just added
         Maybe it worth encapsulate the log in its own class so we can avoid the magic numbers
          */
-        return this.toSend(peers.map {
-            //TODO unit test when moving to the Log class
-            val prevLogIndex = if (log.size - 2 <= 0) 0 else log.size - 2
-            val prevLogTerm = if (prevLogIndex <= 0) this.term else log.get(log.size - 2).term
+        return this.toSend(
+            peers.map {
+                // TODO unit test when moving to the Log class
+                val prevLogIndex = if (log.size - 2 <= 0) 0 else log.size - 2
+                val prevLogTerm = if (prevLogIndex <= 0) this.term else log.get(log.size - 2).term
 
-            AppendEntry(this.address, it, command.content, this.term, prevLogIndex, prevLogTerm, this.commitIndex) })
+                AppendEntry(this.address, it, command.content, this.term, prevLogIndex, prevLogTerm, this.commitIndex)
+            },
+        )
     }
 
     override fun tickWithoutSideEffects(): Node {
         val tickMessages = network.get(this.address)
 
-        val node = tickMessages.fold(this as Node) { node, msg ->
-            node.process(msg)
-        }
+        val node =
+            tickMessages.fold(this as Node) { node, msg ->
+                node.process(msg)
+            }
 
         val nodesWeHaveSentMessagesTo =
             // TODO: encapsulate? also add election term in the future
             node.sent()
                 .filter { it.sentAt > network.clock - config.heartbeatTimeout }
                 .map { it.message.dest } +
-                    node.messages.toSend.map { it.dest }
+                node.messages.toSend.map { it.dest }
 
         val nodesWeNeedToSendHeartbeatTo = peers.toSet() - nodesWeHaveSentMessagesTo.toSet()
         val heartbeats = nodesWeNeedToSendHeartbeatTo.map { Heartbeat(address, it, term, "0") }
@@ -68,8 +70,9 @@ data class Leader(
         return node.toSend(heartbeats)
     }
 
-    //TODO It seems the 'received =' can be removed as Kotlin can infer the type
+    // TODO It seems the 'received =' can be removed as Kotlin can infer the type
     override fun add(vararg message: SentMessage): Leader = this.copy(messages = messages.copy(sent = sent() + message))
+
     override fun add(vararg message: ReceivedMessage): Leader = this.copy(messages = messages.copy(received = received() + message))
 
     override fun receive(message: Message): Node {

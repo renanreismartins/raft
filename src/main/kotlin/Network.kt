@@ -3,12 +3,17 @@ package org.example
 typealias NetworkDelay = Int
 typealias DeliveryTime = Int
 
-data class NetworkMessage(val message: Message, val deliveryTime: DeliveryTime)
+data class NetworkMessage(
+    val message: Message,
+    val deliveryTime: DeliveryTime,
+)
 
-class Network(initialMessages: Map<Address, List<NetworkMessage>> = emptyMap()) {
+class Network(
+    initialMessages: Map<Address, List<NetworkMessage>> = emptyMap(),
+) {
     var clock = 0
 
-    //TODO Write an ADR
+    // TODO Write an ADR
     // The keys are a Pair because we want to use the Host and Port to get the messages. This is because
     // Address now has specialised types (Source and Destination) and even tho they have the same values
     // they are compared differently so the messages were not returned
@@ -18,10 +23,11 @@ class Network(initialMessages: Map<Address, List<NetworkMessage>> = emptyMap()) 
     fun get(address: Address): List<Message> {
         val hostAndPort = address.host to address.port
         // get all messages for address with 0 delay and store
-        val (messagesToDeliver, remaining) = messages[hostAndPort]
-            ?.partition { (_, deliveryTime) ->
-                deliveryTime <= clock
-            } ?: (listOf<NetworkMessage>() to listOf())
+        val (messagesToDeliver, remaining) =
+            messages[hostAndPort]
+                ?.partition { (_, deliveryTime) ->
+                    deliveryTime <= clock
+                } ?: (listOf<NetworkMessage>() to listOf())
 
         messages[hostAndPort] = remaining
 
@@ -29,9 +35,13 @@ class Network(initialMessages: Map<Address, List<NetworkMessage>> = emptyMap()) 
         return messagesToDeliver.map { it.message }
     }
 
-    fun add(message: Message, delay: NetworkDelay = 0) {
+    fun add(
+        message: Message,
+        delay: NetworkDelay = 0,
+    ) {
         val networkMessage = NetworkMessage(message, clock + 1 + delay)
-        messages[message.dest.host to message.dest.port] = messages[message.dest.host to message.dest.port]?.plus(networkMessage) ?: listOf(networkMessage)
+        messages[message.dest.host to message.dest.port] =
+            messages[message.dest.host to message.dest.port]?.plus(networkMessage) ?: listOf(networkMessage)
     }
 
     fun tick(ticks: Int = 1): Network {
