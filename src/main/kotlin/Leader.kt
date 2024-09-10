@@ -10,12 +10,12 @@ data class Leader(
     override val network: Network,
     override val peers: List<Destination>,
     override val messages: Messages = Messages(),
-    override val log: List<Message> = emptyList(),
+    override val log: Log = Log(),
     override val term: Int = 1,
     override val config: Config = Config(),
     override val commitIndex: Int = 0,
     override val lastApplied: Int = 0,
-    val nextIndex: Map<Destination, Int> = peers.associateWith { log.size },
+    val nextIndex: Map<Destination, Int> = peers.associateWith { log.size() },
     val matchIndex: Map<Destination, Int> = peers.associateWith { 0 },
 ) : Node(address, name, state, network, peers) {
     override fun handleMessage(message: Message): Node {
@@ -25,7 +25,7 @@ data class Leader(
             is VoteFromFollower -> this
             // TODO ADR to explain our AppendEntries is AppendEntry - we decide to send one message per entry
             // TODO when adding to the log, should we increase the commitIndex?
-            is ClientCommand -> this.copy(log = log + message, commitIndex = this.commitIndex + 1).toSend(message)
+            is ClientCommand -> this.copy(log = log.add(message), commitIndex = this.commitIndex + 1).toSend(message)
             is AppendEntry -> this
             is AppendEntryResponse -> this
         }
@@ -41,10 +41,7 @@ data class Leader(
         return this.toSend(
             peers.map {
                 // TODO unit test when moving to the Log class
-                val prevLogIndex = if (log.size - 2 <= 0) 0 else log.size - 2
-                val prevLogTerm = if (prevLogIndex <= 0) this.term else log.get(log.size - 2).term
-
-                AppendEntry(this.address, it, command.content, this.term, prevLogIndex, prevLogTerm, this.commitIndex)
+                AppendEntry(this.address, it, command.content, this.term, log.prevLogIndex(), log.prevLogTerm()?:this.term, this.commitIndex)
             },
         )
     }

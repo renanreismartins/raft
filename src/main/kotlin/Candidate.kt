@@ -7,7 +7,7 @@ data class Candidate(
     override val network: Network,
     override val peers: List<Destination>,
     override val messages: Messages = Messages(),
-    override val log: List<Message> = emptyList(),
+    override val log: Log = Log(),
     override val term: Int = 0,
     override val config: Config = Config(),
     override val commitIndex: Int = 0,

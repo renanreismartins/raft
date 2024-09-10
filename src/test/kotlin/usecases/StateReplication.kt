@@ -50,7 +50,7 @@ class StateReplication {
 
         assertEquals(1, newLeader.commitIndex)
         assertEquals(1, newFollower1.messages.received.size)
-        assertEquals(1, newFollower1.log.size)
+        assertEquals(1, newFollower1.log.size())
 
         // TODO: TimeMachine is immutable, which means we can't keep ticking the initial instance, which is inconvenient for big tests. Refactor.
         val (_, newLeader2, _, _) = timeMachine.tick()

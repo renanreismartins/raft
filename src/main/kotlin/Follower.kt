@@ -7,7 +7,7 @@ data class Follower(
     override val network: Network,
     override val peers: List<Destination>,
     override val messages: Messages = Messages(),
-    override val log: List<Message> = emptyList(),
+    override val log: Log = Log(),
     override val term: Int = 0,
     override val config: Config = Config(),
     override val commitIndex: Int = 0,
@@ -24,7 +24,7 @@ data class Follower(
                 }
             }
             is AppendEntry ->
-                this.copy(log = log + message).toSend(
+                this.copy(log = log.add(message)).toSend(
                     AppendEntryResponse(
                         src = this.address,
                         dest = Destination.from(message.src),
