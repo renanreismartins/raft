@@ -41,7 +41,15 @@ data class Leader(
         return this.toSend(
             peers.map {
                 // TODO unit test when moving to the Log class
-                AppendEntry(this.address, it, command.content, this.term, log.prevLogIndex(), log.prevLogTerm()?:this.term, this.commitIndex)
+                AppendEntry(
+                    this.address,
+                    it,
+                    command.content,
+                    this.term,
+                    log.prevLogIndex(),
+                    log.prevLogTerm() ?: this.term,
+                    this.commitIndex,
+                )
             },
         )
     }
