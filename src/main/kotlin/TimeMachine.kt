@@ -1,8 +1,8 @@
 package org.example
 
 class TimeMachine(
-    val network: Network,
-    vararg val nodes: Node,
+    initialNetwork: Network,
+    vararg initialNodes: Node,
 ) {
     /**
      * The Network must come first, as the Nodes rely on its clock when they tick
@@ -12,11 +12,14 @@ class TimeMachine(
      *      then when NodeB ticks, it will be on tick 1.
      */
 
-    fun tick(): TimeMachine =
-        TimeMachine(
-            network = network.tick(),
-            *nodes.map(Node::tick).toTypedArray(),
-        )
+    private var network = initialNetwork
+    private var nodes = initialNodes
+
+    fun tick(): TimeMachine {
+        network.tick()
+        nodes = nodes.map(Node::tick).toTypedArray()
+        return this
+    }
 
     fun tick(count: Int): TimeMachine = (0..count).fold(this) { acc, _ -> acc.tick() }
 
