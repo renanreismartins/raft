@@ -85,19 +85,4 @@ data class Candidate(
             lastApplied = this.lastApplied,
             commitIndex = this.commitIndex,
         )
-
-    private fun demote(): Follower =
-        Follower(
-            this.address,
-            this.name,
-            this.state,
-            this.network,
-            this.peers,
-            this.messages,
-            this.log,
-            this.term,
-            this.config,
-            lastApplied = this.lastApplied,
-            commitIndex = this.commitIndex,
-        )
 }
