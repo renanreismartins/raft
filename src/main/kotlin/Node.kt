@@ -46,6 +46,28 @@ sealed class Node(
         return this
     }
 
+    fun appendEntryResponse(message: Message): AppendEntryResponse {
+        if (message.term < this.term) {
+            return AppendEntryResponse(
+                src = this.address,
+                dest = Destination.from(message.src),
+                content = "",
+                term = this.term,
+                success = false,
+            )
+        }
+
+        // TODO wrong, this is only for compilation purposes. Need to continue on the
+        // AppendEntry RPC box of the paper
+        return AppendEntryResponse(
+            src = this.address,
+            dest = Destination.from(message.src),
+            content = "",
+            term = this.term,
+            success = true,
+        )
+    }
+
     fun demote(): Follower =
         Follower(
             address = this.address,
