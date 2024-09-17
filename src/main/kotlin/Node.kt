@@ -46,8 +46,18 @@ sealed class Node(
         return this
     }
 
-    fun appendEntryResponse(message: Message): AppendEntryResponse {
+    fun appendEntryResponse(message: AppendEntry): AppendEntryResponse {
         if (message.term < this.term) {
+            return AppendEntryResponse(
+                src = this.address,
+                dest = Destination.from(message.src),
+                content = "",
+                term = this.term,
+                success = false,
+            )
+        }
+
+        if (!log.prevLogIndexCheck(message.prevLogIndex, message.prevLogTerm)) {
             return AppendEntryResponse(
                 src = this.address,
                 dest = Destination.from(message.src),

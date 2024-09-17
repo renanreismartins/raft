@@ -3,19 +3,25 @@ package org.example
 class Log(
     val messages: List<Message> = emptyList(),
 ) {
-    fun add(message: Message): Log {
-        return Log(
+    fun add(message: Message): Log =
+        Log(
             messages = this.messages + message,
         )
-    }
 
-    fun prevLogIndex(): Int {
-        return if (messages.size <= 1) 0 else messages.size - 1
-    }
+    fun prevLogIndex(): Int = if (messages.size <= 1) 0 else messages.size - 1
 
-    fun prevLogTerm(): Int? {
-        return if (prevLogIndex() <= 0) null else messages.get(prevLogIndex()).term
-    }
+    fun prevLogTerm(): Int? = if (prevLogIndex() <= 0) null else messages.get(prevLogIndex()).term
+
+    // AppendEntries RPC, received implementation 5.3
+    fun prevLogIndexCheck(
+        index: Int,
+        term: Int,
+    ): Boolean = messages.getOrNull(index)?.let { it.term == term } ?: false
+
+    fun resolveConflicts(
+        index: Int,
+        term: Int,
+    ): Log = if (prevLogIndexCheck(index, term)) Log(messages.take(index - 1)) else this
 
     /*
     TODO We are refactoring the Nodes to use Log, we found out that on our current implementation in Leader the
@@ -27,7 +33,5 @@ class Log(
     We are adding this method here just to not alter behaviour on the refactoring, but might be removed after confirming
     the previous assumptions
      */
-    fun size(): Int {
-        return messages.size
-    }
+    fun size(): Int = messages.size
 }
