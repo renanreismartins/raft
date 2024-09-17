@@ -46,36 +46,42 @@ sealed class Node(
         return this
     }
 
-    fun appendEntryResponse(message: AppendEntry): AppendEntryResponse {
+    fun appendEntryResponse(message: AppendEntry): Node {
         if (message.term < this.term) {
-            return AppendEntryResponse(
+            return this.toSend(AppendEntryResponse(
                 src = this.address,
                 dest = Destination.from(message.src),
                 content = "",
                 term = this.term,
                 success = false,
-            )
+            ))
         }
 
         if (!log.prevLogIndexCheck(message.prevLogIndex, message.prevLogTerm)) {
-            return AppendEntryResponse(
+            return this.log(this.log.resolveConflicts(message.prevLogIndex, message.prevLogTerm))
+                .toSend(AppendEntryResponse(
                 src = this.address,
                 dest = Destination.from(message.src),
                 content = "",
                 term = this.term,
                 success = false,
-            )
+            ))
         }
+
+
 
         // TODO wrong, this is only for compilation purposes. Need to continue on the
         // AppendEntry RPC box of the paper
-        return AppendEntryResponse(
-            src = this.address,
-            dest = Destination.from(message.src),
-            content = "",
-            term = this.term,
-            success = true,
-        )
+        return this.addToLog(message)
+            .toSend(
+                AppendEntryResponse(
+                    src = this.address,
+                    dest = Destination.from(message.src),
+                    content = "",
+                    term = this.term,
+                    success = true,
+                )
+            )
     }
 
     fun demote(): Follower =
@@ -103,6 +109,20 @@ sealed class Node(
     abstract fun add(vararg message: SentMessage): Node
 
     abstract fun add(vararg message: ReceivedMessage): Node
+
+    fun log(log: Log): Node =
+        when (this) {
+            is Follower -> this.copy(log = log)
+            is Candidate -> this.copy(log = log)
+            is Leader -> this.copy(log = log)
+        }
+
+    fun addToLog(message: Message): Node =
+        when (this) {
+            is Follower -> this.copy(log = log.add(message))
+            is Candidate -> this.copy(log = log.add(message))
+            is Leader -> this.copy(log = log.add(message))
+        }
 
     fun toSend(message: Message): Node =
         when (this) {

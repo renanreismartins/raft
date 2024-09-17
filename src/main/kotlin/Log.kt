@@ -18,10 +18,11 @@ class Log(
         term: Int,
     ): Boolean = messages.getOrNull(index)?.let { it.term == term } ?: false
 
+    //TODO TEST
     fun resolveConflicts(
         index: Int,
         term: Int,
-    ): Log = if (prevLogIndexCheck(index, term)) Log(messages.take(index - 1)) else this
+    ): Log = if (prevLogIndexCheck(index, term)) this else Log(messages.take(index - 1))
 
     /*
     TODO We are refactoring the Nodes to use Log, we found out that on our current implementation in Leader the

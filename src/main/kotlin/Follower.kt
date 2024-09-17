@@ -24,7 +24,7 @@ data class Follower(
                 }
             }
             // TODO: We should not be adding messages to the Log without checking if it should be there
-            is AppendEntry -> this.copy(log = log.add(message)).toSend(appendEntryResponse(message))
+            is AppendEntry -> appendEntryResponse(message)
             is VoteFromFollower -> this
             is ClientCommand -> this
             is AppendEntryResponse -> this
