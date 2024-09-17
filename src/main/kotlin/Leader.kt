@@ -18,8 +18,8 @@ data class Leader(
     val nextIndex: Map<Destination, Int> = peers.associateWith { log.size() },
     val matchIndex: Map<Destination, Int> = peers.associateWith { 0 },
 ) : Node(address, name, state, network, peers) {
-    override fun handleMessage(message: Message): Node {
-        return when (message) {
+    override fun handleMessage(message: Message): Node =
+        when (message) {
             is Heartbeat -> this.copy(state = state + message.content.toInt())
             is RequestForVotes -> this
             is VoteFromFollower -> this
@@ -29,7 +29,6 @@ data class Leader(
             is AppendEntry -> this
             is AppendEntryResponse -> this
         }
-    }
 
     fun toSend(command: ClientCommand): Node {
         /*
@@ -64,7 +63,8 @@ data class Leader(
 
         val nodesWeHaveSentMessagesTo =
             // TODO: encapsulate? also add election term in the future
-            node.sent()
+            node
+                .sent()
                 .filter { it.sentAt > network.clock - config.heartbeatTimeout }
                 .map { it.message.dest } +
                 node.messages.toSend.map { it.dest }
@@ -75,12 +75,7 @@ data class Leader(
         return node.toSend(heartbeats)
     }
 
-    // TODO It seems the 'received =' can be removed as Kotlin can infer the type
     override fun add(vararg message: SentMessage): Leader = this.copy(messages = messages.copy(sent = sent() + message))
 
     override fun add(vararg message: ReceivedMessage): Leader = this.copy(messages = messages.copy(received = received() + message))
-
-    override fun receive(message: Message): Node {
-        TODO("Not yet implemented")
-    }
 }

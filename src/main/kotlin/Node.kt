@@ -88,8 +88,6 @@ sealed class Node(
             .handleOutdatedTerm(received)
             .handleMessage(received)
 
-    abstract fun receive(message: Message): Node
-
     // TODO add receiving a list would avoid having to do the convoluted calls transforming a list in a typedArray and then using the * to destruct the array?
     // as in node.add(*heartbeats.map { SentMessage(it, network.clock) }.toTypedArray())
     abstract fun add(vararg message: SentMessage): Node

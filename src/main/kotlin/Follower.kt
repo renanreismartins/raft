@@ -55,15 +55,10 @@ data class Follower(
         return hasReachedTimeoutWithLastMessage || hasReachedFirstTimeoutAfterStartup
     }
 
-    override fun receive(message: Message): Node {
-        TODO("Not yet implemented")
-    }
-
     // TODO unit test
     // TODO consider the election term instead of all the sent messages
     fun shouldVote(): Boolean = (sent() + messages.toSend).filterIsInstance<VoteFromFollower>().isEmpty()
 
-    // TODO It seems the 'received =' can be removed as Kotlin can infer the type
     override fun add(vararg message: SentMessage): Follower = this.copy(messages = messages.copy(sent = sent() + message))
 
     override fun add(vararg message: ReceivedMessage): Follower = this.copy(messages = messages.copy(received = received() + message))

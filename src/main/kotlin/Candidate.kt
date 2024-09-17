@@ -14,10 +14,6 @@ data class Candidate(
     override val lastApplied: Int = 0,
     val termStartedAt: Int = network.clock + 1,
 ) : Node(address, name, state, network, peers) {
-    // TODO Make process return Node, so we have finer control over how we handle each message
-    //      e.g. If a Candidate receives a Heartbeat, it should demote to follower, this is difficult
-    //      with the current architecture. This would allow us to remove methods to demote/promote
-
     override fun handleMessage(message: Message): Node {
         return when (message) {
             is Heartbeat -> {
@@ -61,12 +57,6 @@ data class Candidate(
 
     private fun clusterSize(): Int = peers.size + 1
 
-    // TODO MOVE TO NODE
-    override fun receive(message: Message): Node {
-        TODO("Not yet implemented")
-    }
-
-    // TODO It seems the 'received =' can be removed as Kotlin can infer the type
     override fun add(vararg message: ReceivedMessage): Candidate = this.copy(messages = messages.copy(received = received() + message))
 
     override fun add(vararg message: SentMessage): Candidate = this.copy(messages = messages.copy(sent = sent() + message))
