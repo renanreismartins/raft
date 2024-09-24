@@ -1,5 +1,7 @@
 package org.example
 
+import kotlin.math.min
+
 // TODO: Figure out a good type for this when we start cleaning
 // TODO: Add this to all the tests, we should use 'random' values
 data class Config(
@@ -48,31 +50,34 @@ sealed class Node(
 
     fun appendEntryResponse(message: AppendEntry): Node {
         if (message.term < this.term) {
-            return this.toSend(AppendEntryResponse(
-                src = this.address,
-                dest = Destination.from(message.src),
-                content = "",
-                term = this.term,
-                success = false,
-            ))
+            return this.toSend(
+                AppendEntryResponse(
+                    src = this.address,
+                    dest = Destination.from(message.src),
+                    content = "",
+                    term = this.term,
+                    success = false,
+                ),
+            )
         }
 
         if (!log.prevLogIndexCheck(message.prevLogIndex, message.prevLogTerm)) {
-            return this.log(this.log.resolveConflicts(message.prevLogIndex, message.prevLogTerm))
-                .toSend(AppendEntryResponse(
-                src = this.address,
-                dest = Destination.from(message.src),
-                content = "",
-                term = this.term,
-                success = false,
-            ))
+            return this
+                .log(this.log.resolveConflicts(message.prevLogIndex, message.prevLogTerm))
+                .toSend(
+                    AppendEntryResponse(
+                        src = this.address,
+                        dest = Destination.from(message.src),
+                        content = "",
+                        term = this.term,
+                        success = false,
+                    ),
+                )
         }
 
-
-
-        // TODO wrong, this is only for compilation purposes. Need to continue on the
-        // AppendEntry RPC box of the paper
-        return this.addToLog(message)
+        return this
+            .addToLog(message)
+            .commitIndex(min(message.leaderCommit, commitIndex))
             .toSend(
                 AppendEntryResponse(
                     src = this.address,
@@ -80,7 +85,7 @@ sealed class Node(
                     content = "",
                     term = this.term,
                     success = true,
-                )
+                ),
             )
     }
 
@@ -122,6 +127,13 @@ sealed class Node(
             is Follower -> this.copy(log = log.add(message))
             is Candidate -> this.copy(log = log.add(message))
             is Leader -> this.copy(log = log.add(message))
+        }
+
+    fun commitIndex(index: Int): Node =
+        when (this) {
+            is Follower -> this.copy(commitIndex = index)
+            is Candidate -> this.copy(commitIndex = index)
+            is Leader -> this.copy(commitIndex = index)
         }
 
     fun toSend(message: Message): Node =
