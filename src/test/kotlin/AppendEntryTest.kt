@@ -2,11 +2,13 @@ import org.example.AppendEntry
 import org.example.AppendEntryResponse
 import org.example.Destination
 import org.example.Follower
+import org.example.Log
 import org.example.Network
 import org.example.Source
 import org.example.TimeMachine
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.test.fail
 
 class AppendEntryTest {
@@ -59,17 +61,96 @@ class AppendEntryTest {
 
     @Test
     fun `Do not accept (reply false) when the receiver log doesn't contain an entry at prevLogIndex`() {
+        // Given
+        val followerAddress = Source("127.0.0.1", 9001)
+        val follower =
+            Follower(
+                followerAddress,
+                "Follower",
+                peers = listOf(),
+                network = Network(),
+                term = 1,
+            )
+
+        // When
+        val node =
+            follower.appendEntryResponse(
+                AppendEntry(
+                    src = Source("127.0.0.1", 9002),
+                    dest = Destination.from(followerAddress),
+                    content = "1",
+                    term = 1,
+                    prevLogIndex = 2,
+                    prevLogTerm = 1,
+                    leaderCommit = 1,
+                ),
+            )
+
+        // Then
+        val response = node.messages.toSend.first()
+        assertIs<AppendEntryResponse>(response)
+        assertEquals(false, response.success)
+        assertEquals(1, response.term)
+    }
+
+    @Suppress("ktlint:standard:max-line-length")
+    @Test
+    fun `Do not accept (reply false) when the receiver log entry at prevLogIndex conflicts with the term`() {
+        // Given
+        val followerAddress = Source("127.0.0.1", 9001)
+        val sourceAddress = Source("127.0.0.1", 9002)
+        val follower =
+            Follower(
+                followerAddress,
+                "Follower",
+                peers = listOf(),
+                network = Network(),
+                term = 1,
+                log =
+                    Log(
+                        listOf(
+                            AppendEntry(
+                                src = sourceAddress,
+                                dest = Destination.from(followerAddress),
+                                content = "",
+                                term = 1,
+                                prevLogIndex = 0,
+                                prevLogTerm = 0,
+                                leaderCommit = 0,
+                            ),
+                        ),
+                    ),
+            )
+
+        // When
+        val node =
+            follower.appendEntryResponse(
+                AppendEntry(
+                    src = Source("127.0.0.1", 9002),
+                    dest = Destination.from(followerAddress),
+                    content = "1",
+                    term = 2,
+                    prevLogIndex = 1,
+                    prevLogTerm = 2,
+                    leaderCommit = 0,
+                ),
+            )
+
+        // Then
+        val response = node.messages.toSend.first()
+        assertIs<AppendEntryResponse>(response)
+        assertEquals(false, response.success)
+        assertEquals(1, response.term)
+    }
+
+    @Test
+    fun `Accepts (replies true) when logs are aligned, appends new log entry and updates commitIndex`() {
         fail()
     }
 
     @Suppress("ktlint:standard:max-line-length")
     @Test
-    fun `Do not accept (reply false) when the receiver log entry at prevLogIndex conflicts with the term and removes conflicts from the log`() {
-        fail()
-    }
-
-    @Test
-    fun `Accepts (replies true) when all the conditions are met, appends log entries and updates commitIndex`() {
+    fun `Accepts (replies true) when Follower log has a conflict on the NEW entry, clears conflicting entries, appends new entry and updates commitIndex`() {
         fail()
     }
 }
