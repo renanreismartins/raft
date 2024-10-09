@@ -9,6 +9,7 @@ data class Leader(
     override val state: Int = 0,
     override val network: Network,
     override val peers: List<Destination>,
+    override val votedFor: Address? = null,
     override val messages: Messages = Messages(),
     override val log: Log = Log(),
     override val term: Int = 1,
@@ -17,7 +18,7 @@ data class Leader(
     override val lastApplied: Int = 0,
     val nextIndex: Map<Destination, Int> = peers.associateWith { log.size() },
     val matchIndex: Map<Destination, Int> = peers.associateWith { 0 },
-) : Node(address, name, state, network, peers) {
+) : Node(address, name, state, network, peers, votedFor) {
     override fun handleMessage(message: Message): Node =
         when (message) {
             is Heartbeat -> this.copy(state = state + message.content.toInt())

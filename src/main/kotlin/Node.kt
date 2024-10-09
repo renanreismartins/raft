@@ -15,6 +15,7 @@ sealed class Node(
     open val state: Int,
     open val network: Network,
     open val peers: List<Destination>,
+    open val votedFor: Address?,
     open val messages: Messages = Messages(),
     open val log: Log = Log(),
     open val term: Int = 0,
@@ -48,6 +49,14 @@ sealed class Node(
         return this
     }
 
+    /*
+        TODO AppendEntries RPC
+        We have too many doubts regarding this implementation. Let's re-reader the paper and revisit
+
+        3 - If an existing entry conflicts with a new one, then should we delete the existing entry
+        and all the followings and continue processing items 4 and 5?
+
+     */
     fun appendEntryResponse(message: AppendEntry): Node {
         if (message.term < this.term) {
             return this.toSend(
@@ -63,7 +72,6 @@ sealed class Node(
 
         if (!log.prevLogIndexCheck(message.prevLogIndex, message.prevLogTerm)) {
             return this
-                .log(this.log.resolveConflicts(message.prevLogIndex, message.prevLogTerm))
                 .toSend(
                     AppendEntryResponse(
                         src = this.address,
@@ -76,6 +84,8 @@ sealed class Node(
         }
 
         return this
+             // When there is no conflict on prevLogIndex we are keeping the whole log, otherwise we delete all the existing next entries
+            .log(Log(log.messages.take(message.prevLogIndex - 1))) //TODO - 1 because index start on 1?
             .addToLog(message)
             .commitIndex(min(message.leaderCommit, commitIndex))
             .toSend(

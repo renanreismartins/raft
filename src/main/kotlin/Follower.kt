@@ -6,13 +6,15 @@ data class Follower(
     override val state: Int = 0,
     override val network: Network,
     override val peers: List<Destination>,
+    override val votedFor: Address? = null,
     override val messages: Messages = Messages(),
     override val log: Log = Log(),
     override val term: Int = 0,
     override val config: Config = Config(),
     override val commitIndex: Int = 0,
     override val lastApplied: Int = 0,
-) : Node(address, name, state, network, peers) {
+) : Node(address, name, state, network, peers, votedFor) {
+
     override fun handleMessage(message: Message): Node =
         when (message) {
             is Heartbeat -> (this.copy(state = state + message.content.toInt()))
@@ -57,19 +59,30 @@ data class Follower(
     }
 
     // TODO unit test
-    // TODO consider the election term instead of all the sent messages
     fun shouldVote(): Boolean = (sent() + messages.toSend).filterIsInstance<VoteFromFollower>().isEmpty()
+//    fun shouldVote(message: RequestForVotes): Boolean {
+//        return votedFor == null || votedFor == message.src// TODO takes in consideration the type? Address == Source?
+//    }
 
-    override fun add(vararg message: SentMessage): Follower = this.copy(messages = messages.copy(sent = sent() + message))
+    override fun add(vararg message: SentMessage): Follower =
+        this.copy(messages = messages.copy(sent = sent() + message))
 
-    override fun add(vararg message: ReceivedMessage): Follower = this.copy(messages = messages.copy(received = received() + message))
+    override fun add(vararg message: ReceivedMessage): Follower =
+        this.copy(messages = messages.copy(received = received() + message))
 
     // todo unit test, test the messages state and the term
     private fun promote(): Candidate {
         val requestForVotes = peers.map { peer -> RequestForVotes(this.address, peer, term, "REQUEST FOR VOTES") }
         val messages =
             this.messages
-                .received(VoteFromFollower(this.address, Destination.from(this.address), term, "Vote from self").toReceived())
+                .received(
+                    VoteFromFollower(
+                        this.address,
+                        Destination.from(this.address),
+                        term,
+                        "Vote from self"
+                    ).toReceived()
+                )
                 .toSend(requestForVotes)
 
         return Candidate(
@@ -78,6 +91,7 @@ data class Follower(
             this.state,
             this.network,
             this.peers,
+            this.votedFor,
             messages,
             this.log,
             this.term + 1,

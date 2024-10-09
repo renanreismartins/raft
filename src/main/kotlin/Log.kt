@@ -18,12 +18,6 @@ class Log(
         term: Int,
     ): Boolean = messages.getOrNull(index)?.let { it.term == term } ?: false
 
-    //TODO TEST
-    fun resolveConflicts(
-        index: Int,
-        term: Int,
-    ): Log = if (prevLogIndexCheck(index, term)) this else Log(messages.take(index - 1))
-
     /*
     TODO We are refactoring the Nodes to use Log, we found out that on our current implementation in Leader the
     val nextIndex is calculated as the size of the messageLog. We believe that is incorrect because the docs state:

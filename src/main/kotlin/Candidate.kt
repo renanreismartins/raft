@@ -6,6 +6,7 @@ data class Candidate(
     override val state: Int = 0,
     override val network: Network,
     override val peers: List<Destination>,
+    override val votedFor: Address? = null,
     override val messages: Messages = Messages(),
     override val log: Log = Log(),
     override val term: Int = 0,
@@ -13,7 +14,7 @@ data class Candidate(
     override val commitIndex: Int = 0,
     override val lastApplied: Int = 0,
     val termStartedAt: Int = network.clock + 1,
-) : Node(address, name, state, network, peers) {
+) : Node(address, name, state, network, peers, votedFor) {
     override fun handleMessage(message: Message): Node {
         return when (message) {
             is Heartbeat -> {
@@ -46,7 +47,7 @@ data class Candidate(
             }
 
         if (newNode is Candidate && newNode.hasReachedElectionTimeout()) {
-            return Candidate(this.address, this.name, this.state, this.network, this.peers, messages, this.log, this.term + 1)
+            return Candidate(this.address, this.name, this.state, this.network, this.peers, this.votedFor, messages, this.log, this.term + 1)
         }
         return newNode
     }
@@ -68,6 +69,7 @@ data class Candidate(
             this.state,
             this.network,
             this.peers,
+            this.votedFor,
             this.messages,
             this.log,
             this.term,
