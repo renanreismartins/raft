@@ -84,9 +84,9 @@ sealed class Node(
         }
 
         return this
-             // When there is no conflict on prevLogIndex we are keeping the whole log, otherwise we delete all the existing next entries
-            .log(Log(log.messages.take(message.prevLogIndex - 1))) //TODO - 1 because index start on 1?
-            .addToLog(message)
+            // When there is no conflict on prevLogIndex we are keeping the whole log, otherwise we delete all the existing next entries
+            .log(Log(log.messages.take(message.prevLogIndex)))
+            .log(log.add(message))
             .commitIndex(min(message.leaderCommit, commitIndex))
             .toSend(
                 AppendEntryResponse(
@@ -130,13 +130,6 @@ sealed class Node(
             is Follower -> this.copy(log = log)
             is Candidate -> this.copy(log = log)
             is Leader -> this.copy(log = log)
-        }
-
-    fun addToLog(message: Message): Node =
-        when (this) {
-            is Follower -> this.copy(log = log.add(message))
-            is Candidate -> this.copy(log = log.add(message))
-            is Leader -> this.copy(log = log.add(message))
         }
 
     fun commitIndex(index: Int): Node =

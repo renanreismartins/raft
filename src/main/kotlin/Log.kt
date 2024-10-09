@@ -1,5 +1,7 @@
 package org.example
 
+// TODO: Log should not contain 'Message's, instead it should ONLY contain entries for the state machine (AppendEntries/ClientCommand)
+//       make a new type to represent the required info just for Log.
 class Log(
     val messages: List<Message> = emptyList(),
 ) {
@@ -16,7 +18,12 @@ class Log(
     fun prevLogIndexCheck(
         index: Int,
         term: Int,
-    ): Boolean = messages.getOrNull(index)?.let { it.term == term } ?: false
+    ): Boolean {
+        if (index == 0) {
+            return true
+        }
+        return messages.getOrNull(index - 1)?.let { it.term == term } ?: false
+    }
 
     /*
     TODO We are refactoring the Nodes to use Log, we found out that on our current implementation in Leader the

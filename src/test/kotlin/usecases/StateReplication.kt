@@ -45,6 +45,8 @@ class StateReplication {
 
         network.add(ClientCommand(Source("127.0.0.1", 9999), Destination.from(leaderAddress), 1, "client command"))
 
+        // 1 tick for the Leader to process the ClientCommand
+        // another tick for the Followers to process the AppendEntries RPC
         val timeMachine = TimeMachine(network, leader, follower1, follower2).tick(2)
         val (_, newLeader, newFollower1, newFollower2) = timeMachine
 
@@ -61,6 +63,11 @@ class StateReplication {
          *  2 & 3. AppendStateResponse from both Followers
          */
         assertEquals(3, newLeader2.messages.received.size)
-        assertEquals(2, newLeader2.messages.received.filter { it.message is AppendEntryResponse }.size)
+        assertEquals(
+            2,
+            newLeader2.messages.received
+                .filter { it.message is AppendEntryResponse }
+                .size,
+        )
     }
 }
