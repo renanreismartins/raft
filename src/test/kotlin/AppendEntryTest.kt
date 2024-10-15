@@ -211,4 +211,6 @@ class AppendEntryTest {
     fun `Accepts (replies true) when Follower log has a conflict on the NEW entry, clears conflicting entries, appends new entry and updates commitIndex`() {
         fail()
     }
+
+    //TODO write more tests from the leader perspective; When the appendEntryResponse is successfull the leader has to update its follower commit index
 }
