@@ -145,7 +145,65 @@ class AppendEntryTest {
 
     @Test
     fun `Accepts (replies true) when logs are aligned, appends new log entry and updates commitIndex`() {
-        fail()
+        // Given
+        val followerAddress = Source("127.0.0.1", 9001)
+        val sourceAddress = Source("127.0.0.1", 9002)
+        val follower =
+            Follower(
+                followerAddress,
+                "Follower",
+                peers = listOf(),
+                network = Network(),
+                term = 1,
+                log =
+                Log(
+                    listOf(
+                        AppendEntry(
+                            src = sourceAddress,
+                            dest = Destination.from(followerAddress),
+                            content = "",
+                            term = 1,
+                            prevLogIndex = 0,
+                            prevLogTerm = 1,
+                            leaderCommit = 1,
+                        ),
+                        AppendEntry(
+                            src = sourceAddress,
+                            dest = Destination.from(followerAddress),
+                            content = "",
+                            term = 2,
+                            prevLogIndex = 1,
+                            prevLogTerm = 1,
+                            leaderCommit = 1,
+                        ),
+                    ),
+                ),
+            )
+
+        // When
+        val node =
+            follower.appendEntryResponse(
+                AppendEntry(
+                    src = Source("127.0.0.1", 9002),
+                    dest = Destination.from(followerAddress),
+                    content = "1",
+                    term = 2,
+                    prevLogIndex = 2,
+                    prevLogTerm = 2,
+                    leaderCommit = 4,
+                ),
+            )
+
+        // Then
+        val response = node.messages.toSend.first()
+        assertIs<AppendEntryResponse>(response)
+        assertEquals(true, response.success)
+
+        //TODO move this assertion to a higher level as the term calculation is done in handleOutdatedTerm
+        //assertEquals(1, response.term)
+
+        assertEquals(3, node.commitIndex)
+        assertEquals(3, node.log.size())
     }
 
     @Suppress("ktlint:standard:max-line-length")

@@ -87,7 +87,7 @@ sealed class Node(
             // When there is no conflict on prevLogIndex we are keeping the whole log, otherwise we delete all the existing next entries
             .log(Log(log.messages.take(message.prevLogIndex)))
             .log(log.add(message))
-            .commitIndex(min(message.leaderCommit, commitIndex))
+            .updateCommitIndex(message.leaderCommit)
             .toSend(
                 AppendEntryResponse(
                     src = this.address,
@@ -97,6 +97,10 @@ sealed class Node(
                     success = true,
                 ),
             )
+    }
+
+    fun updateCommitIndex(leaderCommit: Int): Node {
+        return this.commitIndex(if (leaderCommit > commitIndex) min(leaderCommit, log.size()) else commitIndex)
     }
 
     fun demote(): Follower =
