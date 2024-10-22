@@ -70,10 +70,17 @@ data class Leader(
                 .map { it.message.dest } +
                 node.messages.toSend.map { it.dest }
 
-        val nodesWeNeedToSendHeartbeatTo = peers.toSet() - nodesWeHaveSentMessagesTo.toSet()
-        val heartbeats = nodesWeNeedToSendHeartbeatTo.map { Heartbeat(address, it, term, "0") }
+        if (node is Leader) {
+            //TODO check official implementations on <=
+            val updates = nextIndex.filter { it.value <= node.lastLogIndex() }
+                .map { AppendEntry(node.address, it.key, "", node.term, node.prevLogIndex(), node.prevLogTerm(), node.commitIndex) }
 
-        return node.toSend(heartbeats)
+            val nodesWeNeedToSendHeartbeatTo = peers.toSet() - (nodesWeHaveSentMessagesTo.toSet() + updates.map { it.dest }.toSet())
+            //val nodesWeNeedToSendHeartbeatTo = (peers.toSet() - (nodesWeHaveSentMessagesTo.toSet())) + nodesWithOudatedLog.toSet()
+            val heartbeats = nodesWeNeedToSendHeartbeatTo.map { Heartbeat(address, it, term, "0") }
+            return node.toSend(heartbeats + updates)
+        }
+        return node
     }
 
     override fun add(vararg message: SentMessage): Leader = this.copy(messages = messages.copy(sent = sent() + message))

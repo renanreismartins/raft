@@ -168,4 +168,12 @@ sealed class Node(
     fun sent() = messages.sent
 
     fun received() = messages.received
+
+    fun lastLogIndex(): Int = log.lastLogIndex()
+
+    fun prevLogIndex(): Int = log.prevLogIndex()
+
+    // TODO check the return from log and remove the optional type
+    fun prevLogTerm(): Int = log.prevLogTerm()?: 0
+
 }

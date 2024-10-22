@@ -10,8 +10,11 @@ class Log(
             messages = this.messages + message,
         )
 
+    fun lastLogIndex(): Int = messages.size
+
     fun prevLogIndex(): Int = if (messages.size <= 1) 0 else messages.size - 1
 
+    //TODO why null could be 0?
     fun prevLogTerm(): Int? = if (prevLogIndex() <= 0) null else messages.get(prevLogIndex()).term
 
     // AppendEntries RPC, received implementation 5.3
