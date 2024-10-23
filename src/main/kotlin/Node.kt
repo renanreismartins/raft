@@ -99,9 +99,8 @@ sealed class Node(
             )
     }
 
-    fun updateCommitIndex(leaderCommit: Int): Node {
-        return this.commitIndex(if (leaderCommit > commitIndex) min(leaderCommit, log.size()) else commitIndex)
-    }
+    fun updateCommitIndex(leaderCommit: Int): Node =
+        this.commitIndex(if (leaderCommit > commitIndex) min(leaderCommit, log.size()) else commitIndex)
 
     fun demote(): Follower =
         Follower(
@@ -161,8 +160,6 @@ sealed class Node(
         network.add(message)
     }
 
-    fun Message.toSent(): SentMessage = SentMessage(this, network.clock)
-
     fun Message.toReceived(): ReceivedMessage = ReceivedMessage(this, network.clock)
 
     fun sent() = messages.sent
@@ -174,6 +171,5 @@ sealed class Node(
     fun prevLogIndex(): Int = log.prevLogIndex()
 
     // TODO check the return from log and remove the optional type
-    fun prevLogTerm(): Int = log.prevLogTerm()?: 0
-
+    fun prevLogTerm(): Int = log.prevLogTerm() ?: 0
 }

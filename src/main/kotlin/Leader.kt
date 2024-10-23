@@ -26,33 +26,10 @@ data class Leader(
             is VoteFromFollower -> this
             // TODO ADR to explain our AppendEntries is AppendEntry - we decide to send one message per entry
             // TODO when adding to the log, should we increase the commitIndex?
-            is ClientCommand -> this.copy(log = log.add(message), commitIndex = this.commitIndex + 1).toSend(message)
+            is ClientCommand -> this.copy(log = log.add(message), commitIndex = this.commitIndex + 1)
             is AppendEntry -> this
             is AppendEntryResponse -> this
         }
-
-    fun toSend(command: ClientCommand): Node {
-        /*
-        TODO prevLogIndex = index of log entry immediately preceding new ones
-        The log.size - 1 is the index of the new entry (just added by this command)
-        The log.size - 2 is the index of the entries preceding the log just added
-        Maybe it worth encapsulate the log in its own class so we can avoid the magic numbers
-         */
-        return this.toSend(
-            peers.map {
-                // TODO unit test when moving to the Log class
-                AppendEntry(
-                    this.address,
-                    it,
-                    command.content,
-                    this.term,
-                    log.prevLogIndex(),
-                    log.prevLogTerm() ?: this.term,
-                    this.commitIndex,
-                )
-            },
-        )
-    }
 
     override fun tickWithoutSideEffects(): Node {
         val tickMessages = network.get(this.address)
@@ -71,12 +48,14 @@ data class Leader(
                 node.messages.toSend.map { it.dest }
 
         if (node is Leader) {
-            //TODO check official implementations on <=
-            val updates = nextIndex.filter { it.value <= node.lastLogIndex() }
-                .map { AppendEntry(node.address, it.key, "", node.term, node.prevLogIndex(), node.prevLogTerm(), node.commitIndex) }
+            // TODO check official implementations on <=
+            val updates =
+                nextIndex
+                    .filter { it.value <= node.lastLogIndex() }
+                    // TODO unit test when moving to the Log class
+                    .map { AppendEntry(node.address, it.key, "", node.term, node.prevLogIndex(), node.prevLogTerm(), node.commitIndex) }
 
             val nodesWeNeedToSendHeartbeatTo = peers.toSet() - (nodesWeHaveSentMessagesTo.toSet() + updates.map { it.dest }.toSet())
-            //val nodesWeNeedToSendHeartbeatTo = (peers.toSet() - (nodesWeHaveSentMessagesTo.toSet())) + nodesWithOudatedLog.toSet()
             val heartbeats = nodesWeNeedToSendHeartbeatTo.map { Heartbeat(address, it, term, "0") }
             return node.toSend(heartbeats + updates)
         }
