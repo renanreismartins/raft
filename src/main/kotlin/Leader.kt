@@ -19,8 +19,8 @@ data class Leader(
     val nextIndex: Map<Destination, Int> = peers.associateWith { log.size() },
     val matchIndex: Map<Destination, Int> = peers.associateWith { 0 },
 ) : Node(address, name, state, network, peers, votedFor) {
-    override fun handleMessage(message: Message): Node =
-        when (message) {
+    override fun handleMessage(message: Message): Node {
+        return when (message) {
             is Heartbeat -> this.copy(state = state + message.content.toInt())
             is RequestForVotes -> this
             is VoteFromFollower -> this
@@ -28,8 +28,25 @@ data class Leader(
             // TODO when adding to the log, should we increase the commitIndex?
             is ClientCommand -> this.copy(log = log.add(message), commitIndex = this.commitIndex + 1)
             is AppendEntry -> this
-            is AppendEntryResponse -> this
+            is AppendEntryResponse -> {
+                val senderKey = Destination.from(message.src)
+                val currentNextIndex = nextIndex.getOrDefault(senderKey, 0)
+                val currentMatchIndex = matchIndex.getOrDefault(senderKey, 0)
+                if (message.success) {
+                    // + 1 because if this was successful the node has replicated the log entry, and
+                    // we only send one message per AppendEntriesRPC
+                    return this.copy(
+                        nextIndex = this.nextIndex + (senderKey to currentNextIndex + 1),
+                        matchIndex = this.matchIndex + (senderKey to currentMatchIndex + 1),
+                    )
+                }
+
+                return this.copy(
+                    nextIndex = this.nextIndex + (senderKey to currentNextIndex - 1),
+                )
+            }
         }
+    }
 
     override fun tickWithoutSideEffects(): Node {
         val tickMessages = network.get(this.address)

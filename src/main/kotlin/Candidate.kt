@@ -26,8 +26,20 @@ data class Candidate(
             is RequestForVotes -> this
             is VoteFromFollower -> {
                 if (shouldBecomeLeader()) {
-                    val heartbeats = peers.map { peer -> Heartbeat(address, peer, term, "0") }
-                    return promote().toSend(heartbeats)
+                    val appendEntries =
+                        peers.map { peer ->
+                            AppendEntry(
+                                address,
+                                peer,
+                                content = "noop",
+                                term,
+                                // TODO: Figure out what values to use here (maybe nextIndex?)
+                                prevLogIndex = log.prevLogIndex(),
+                                prevLogTerm = log.prevLogTerm() ?: 0,
+                                leaderCommit = this.commitIndex,
+                            )
+                        }
+                    return promote().toSend(appendEntries)
                 }
                 return this
             }
@@ -47,7 +59,17 @@ data class Candidate(
             }
 
         if (newNode is Candidate && newNode.hasReachedElectionTimeout()) {
-            return Candidate(this.address, this.name, this.state, this.network, this.peers, this.votedFor, messages, this.log, this.term + 1)
+            return Candidate(
+                this.address,
+                this.name,
+                this.state,
+                this.network,
+                this.peers,
+                this.votedFor,
+                messages,
+                this.log,
+                this.term + 1,
+            )
         }
         return newNode
     }
