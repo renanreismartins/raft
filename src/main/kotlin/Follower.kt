@@ -34,18 +34,12 @@ data class Follower(
 
     override fun tickWithoutSideEffects(): Node {
         val tickMessages = network.get(this.address)
-
-        val node =
-            tickMessages.fold(this as Node) { node, msg ->
-                node.process(msg)
-            }
+        val node = tickMessages.fold(this as Node, Node::process)
 
         // TODO: Move the first part (above this comment) into a Node method, then introduce a postProcess method for this logic (and logic in Leader)
-        if ((node as Follower).shouldPromote()) {
-            return node.promote()
-        }
-
-        return node
+        // We know we can do the casting because even after processing all the messages, the type returned is always
+        // a Follower. After the to-do above or some other refactoring we will remove the casting.
+        return if ((node as Follower).shouldPromote()) node.promote() else node
     }
 
     // TODO UNIT TEST
