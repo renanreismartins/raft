@@ -117,10 +117,10 @@ sealed class Node(
             commitIndex = this.commitIndex,
         )
 
-    fun process(received: Message): Node =
-        add(received.toReceived())
-            .handleOutdatedTerm(received)
-            .handleMessage(received)
+    fun process(message: Message): Node =
+        add(message.toReceived())
+            .handleOutdatedTerm(message)
+            .handleMessage(message)
 
     // TODO add receiving a list would avoid having to do the convoluted calls transforming a list in a typedArray and then using the * to destruct the array?
     // as in node.add(*heartbeats.map { SentMessage(it, network.clock) }.toTypedArray())
