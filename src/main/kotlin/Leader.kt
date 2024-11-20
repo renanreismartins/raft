@@ -1,5 +1,7 @@
 package org.example
 
+import java.util.logging.Logger
+
 // TODO maybe we should make all the constructors except the Followe as private
 // this way all nodes can only be initialized as Follower and only transition to a new
 // state thought the state machine
@@ -19,6 +21,7 @@ data class Leader(
     val nextIndex: Map<Destination, Int> = peers.associateWith { log.size() },
     val matchIndex: Map<Destination, Int> = peers.associateWith { 0 },
 ) : Node(address, name, state, network, peers, votedFor) {
+
     override fun handleMessage(message: Message): Node {
         return when (message) {
             is Heartbeat -> this.copy(state = state + message.content.toInt())
@@ -29,6 +32,7 @@ data class Leader(
             is ClientCommand -> this.copy(log = log.add(message), commitIndex = this.commitIndex + 1)
             is AppendEntry -> this
             is AppendEntryResponse -> {
+                logger.info("$address - Received AppendEntryResponse: $message")
                 val senderKey = Destination.from(message.src)
                 val currentNextIndex = nextIndex.getOrDefault(senderKey, 0)
                 val currentMatchIndex = matchIndex.getOrDefault(senderKey, 0)
@@ -70,11 +74,16 @@ data class Leader(
                 nextIndex
                     .filter { it.value <= node.lastLogIndex() }
                     // TODO unit test when moving to the Log class
-                    .map { AppendEntry(node.address, it.key, "", node.term, node.prevLogIndex(), node.prevLogTerm(), node.commitIndex) }
+                    .map { AppendEntry(node.address, it.key, "${System.nanoTime()} - ${System.currentTimeMillis()}", node.term, node.prevLogIndex(), node.prevLogTerm(), node.commitIndex) }
 
             val nodesWeNeedToSendHeartbeatTo = peers.toSet() - (nodesWeHaveSentMessagesTo.toSet() + updates.map { it.dest }.toSet())
             val heartbeats = nodesWeNeedToSendHeartbeatTo.map { Heartbeat(address, it, term, "0") }
-            return node.toSend(heartbeats + updates)
+
+            val newMessages = heartbeats + updates
+            logger.info("${node.address} - Sending ${newMessages.size} messages")
+            logger.info("${node.address} - Messages: $newMessages")
+
+            return node.toSend(newMessages)
         }
         return node
     }

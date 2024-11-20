@@ -1,5 +1,6 @@
 package org.example
 
+import java.util.logging.Logger
 import kotlin.math.min
 
 // TODO: Figure out a good type for this when we start cleaning
@@ -23,6 +24,8 @@ sealed class Node(
     open val commitIndex: Int = 0,
     open val lastApplied: Int = 0,
 ) {
+    val logger: Logger = Logger.getLogger("logger")
+
     fun tick(ticks: Int): Node = (0..ticks).fold(this) { acc, _ -> acc.tick() }
 
     fun tick(): Node {
