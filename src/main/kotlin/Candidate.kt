@@ -23,7 +23,9 @@ data class Candidate(
                 }
                 return copy(state = (state + message.content.toInt())).demote()
             }
-            is RequestForVotes -> this
+            is RequestForVotes -> this //TODO A Candidate can receive a request for vote
+            // from another candidate. We can have two nodes trying to be a candidate
+            // at the same time. The logic applied in Follower can be used here
             is VoteFromFollower -> {
                 if (shouldBecomeLeader()) {
                     val appendEntries =

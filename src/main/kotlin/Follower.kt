@@ -85,7 +85,7 @@ data class Follower(
             this.state,
             this.network,
             this.peers,
-            this.votedFor,
+            this.address,
             messages,
             this.log,
             this.term + 1,
