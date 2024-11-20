@@ -73,7 +73,7 @@ data class Follower(
                     VoteFromFollower(
                         this.address,
                         Destination.from(this.address),
-                        term,
+                        term + 1, //TODO it would be better if the Candidate would handle the vote for itself
                         "Vote from self"
                     ).toReceived()
                 )
