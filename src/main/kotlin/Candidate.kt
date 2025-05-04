@@ -21,6 +21,7 @@ data class Candidate(
                 if (message.term < term) {
                     return this
                 }
+                //TODO if the message comes from a higher term, I should just discard and not change state. Check this
                 return copy(state = (state + message.content.toInt())).demote()
             }
             is RequestForVotes -> this //TODO A Candidate can receive a request for vote
@@ -46,7 +47,14 @@ data class Candidate(
                 return this
             }
             is ClientCommand -> this
-            is AppendEntry -> this
+            is AppendEntry -> {
+                if (term > message.term) {
+                    return this
+                }
+                //TODO if the message comes from a higher term, I should just discard and not change state. Check this
+                return demote()
+
+            }
             is AppendEntryResponse -> this
         }
     }
