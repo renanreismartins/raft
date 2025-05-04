@@ -38,7 +38,7 @@ class ElectionTest {
         val remainsFollower =
             Follower(
                 remainsFollowerAddress,
-                "NodeA",
+                "NodeB",
                 network = network,
                 peers = Destination.from(listOf(remainsFollowerAddress)),
                 config = Config(10),
