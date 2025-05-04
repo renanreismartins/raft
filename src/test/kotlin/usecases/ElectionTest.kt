@@ -1,5 +1,6 @@
 package usecases
 
+import org.example.AppendEntry
 import org.example.Candidate
 import org.example.Config
 import org.example.Destination
@@ -115,7 +116,8 @@ class ElectionTest {
             )
 
         // When
-        val timeMachine = TimeMachine(network, willBecomeLeader, willLoseElection, remainsFollower).tick(4)
+        val timeMachine = TimeMachine(network, willBecomeLeader, willLoseElection, remainsFollower)
+            .tick(4)
         val (_, candidateWillWin, candidateWillLose, follower) = timeMachine
 
         // Then Candidate got promoted and sent its Request for Votes to the Follower
@@ -141,11 +143,10 @@ class ElectionTest {
         assertTrue(leader.received().last().message is VoteFromFollower)
         assertIs<Candidate>(candidateToBeDemoted)
 
-        // TODO check that non-Leaders receive the Heartbeat from new Leader
-        val (_, _, follower1, follower2) = timeMachine.tick()
+        val (_, _, demotedCandidate, follower2) = timeMachine.tick()
         // Candidate has been demoted to Follower
-        assertIs<Follower>(follower1)
-        assertEquals(Heartbeat(willBecomeLeaderAddress, Destination.from(follower1.address), 1, "0"), follower1.received().last().message)
-        assertEquals(Heartbeat(willBecomeLeaderAddress, Destination.from(follower2.address), 1, "0"), follower2.received().last().message)
+        assertIs<Follower>(demotedCandidate)
+        assertEquals(AppendEntry(willBecomeLeaderAddress, Destination.from(demotedCandidate.address), "noop", 1, 0, 0, 0), demotedCandidate.received().last().message)
+        assertEquals(AppendEntry(willBecomeLeaderAddress, Destination.from(follower2.address), "noop", 1, 0, 0, 0), follower2.received().last().message)
     }
 }
