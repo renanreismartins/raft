@@ -11,11 +11,13 @@ sealed class Message(
     open val content: String,
 )
 
+//TODO lasTerm it is used on the Martin K. reference impl.
 data class RequestForVotes(
     override val src: Source,
     override val dest: Destination,
     override val term: Int = 0,
     override val content: String,
+    val lastTerm: Int = 0,
 ) : Message(src, dest, term, content)
 
 data class VoteFromFollower(
