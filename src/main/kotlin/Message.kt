@@ -17,14 +17,17 @@ data class RequestForVotes(
     override val dest: Destination,
     override val term: Int = 0,
     override val content: String,
-    val lastTerm: Int = 0,
+    val lastLogTerm: Int = 0,
+    val logLength: Int = 0,
 ) : Message(src, dest, term, content)
 
+//TODO rename to VoteResponse as everyone can vote.
 data class VoteFromFollower(
     override val src: Source,
     override val dest: Destination,
     override val term: Int = 0,
     override val content: String,
+    val agrees: Boolean = true,
 ) : Message(src, dest, term, content)
 
 data class Heartbeat(
