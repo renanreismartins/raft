@@ -1,8 +1,12 @@
 package org.example.statemachine
 
 import org.example.Address
+import org.example.AppendEntry
+import org.example.AppendEntryResponse
+import org.example.ClientCommand
 import org.example.Config
 import org.example.Destination
+import org.example.Heartbeat
 import org.example.Log
 import org.example.Message
 import org.example.Messages
@@ -10,6 +14,8 @@ import org.example.Network
 import org.example.ReceivedMessage
 import org.example.RequestForVotes
 import org.example.Source
+import org.example.VoteFromFollower
+import org.example.statemachine.messagehandlers.requestForVotesHandler
 
 enum class Role {
     FOLLOWER,
@@ -38,17 +44,35 @@ data class StateMachine(
     // </Candidate>
 ) {
 
+    /*
+    TODO ADR this method allows unit testing, after a unit of time (tick)
+    passes the state of the Node can be verified without the interaction
+    with the other Nodes and network.
+    */
     fun tickWithoutSideEffects(): StateMachine {
         val tickMessages = network.get(this.address)
         val machine = tickMessages
             .fold(this)
-            { machine, message -> machine.add(message.toReceived()) }
+            { machine, message ->
+                when (message) {
+                    is RequestForVotes -> return requestForVotesHandler(machine, message)
+                    is AppendEntry -> TODO()
+                    is AppendEntryResponse -> TODO()
+                    is ClientCommand -> TODO()
+                    is Heartbeat -> TODO()
+                    is VoteFromFollower -> TODO()
+                }
+
+                machine.add(message.toReceived())
+            }
 
         if (role == Role.FOLLOWER && communicationTimedOut()) return machine.startElection()
         if (role == Role.CANDIDATE && hasReachedElectionTimeout()) return machine.startElection()
 
         return machine
     }
+
+
 
     fun tick(): StateMachine {
         val machine = tickWithoutSideEffects()
@@ -76,7 +100,7 @@ data class StateMachine(
         //TODO check if this could be log.prevLogTerm
         //TODO test lastTerm logic
         val lastTerm = if (log.size() > 0) log.messages.last().term else 0
-        val requestForVotes = peers.map { peer -> RequestForVotes(this.address, peer, term, "REQUEST FOR VOTES", lastTerm) }
+        val requestForVotes = peers.map { peer -> RequestForVotes(this.address, peer, term, "REQUEST FOR VOTES", lastTerm, log.size()) }
 
         return this.copy(
             role = Role.CANDIDATE,
@@ -88,6 +112,9 @@ data class StateMachine(
         )
     }
     // </Candidate and Follower>
+
+
+    fun toSend(message: Message): StateMachine = this.copy(messages = messages.toSend(message))
 
     fun received() = messages.received
 

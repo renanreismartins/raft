@@ -64,3 +64,18 @@ to the ElectionTimeOut, it timed out and a new election is needed.
 
 <h3>Recovery from crash</h3>
 Left for later to focus on happy path scenarios and as it can be simulated removing the Node from the network.
+
+<h2>Raft(2/9) - Voting</h2>
+When receiving a Request for Vote (and probably any other message), if the Term in the message is higher than the Term in the receiving Node, it must update its term to the new value. This signals that successful elections have happened and the receiving Node is outdated. This also means the Node have to be demoted to Follower and have the vote decision cleared.
+Note that even in this case a Node is still going to take decision on how to vote.
+
+<h3>Deciding the Vote</h3>
+A Node votes for a Candidate if three conditions are met.
+
+1 - The Candidate Term (that comes in the Vote Request) is the same as its own Term. If they are not, it means that the one of the Nodes have participated in other elections.
+
+2 - The Node have yet not voted for another Candidate. Remember that when a new Election happens a new Candidate will send a Request For Vote with a higher term and the Node will have its state adjusted to reflect the new election (see the description of the beginning of this session). If a Node has voted for itself before on the same Election, it can repeat that vote.
+
+3 - The Log of the candidate is more up to date than the current Node. That is verified checking if the Candidate Log Term is higher than the Last Log Term of the current node. Or if the Logs are on the same term, then the Candidate's log must be bigger than the current Node's log.
+
+If one of the previous conditions are not met then the Node should respond with a negative vote.
