@@ -51,7 +51,7 @@ data class StateMachine(
     */
     fun tickWithoutSideEffects(): StateMachine {
         val tickMessages = network.get(this.address)
-        val machine = tickMessages
+        val nodeAfterProcessing = tickMessages
             .fold(this)
             { machine, message ->
                  when (message) {
@@ -64,10 +64,10 @@ data class StateMachine(
                 }.add(message.toReceived())
             }
 
-        if (role == Role.FOLLOWER && communicationTimedOut()) return machine.startElection()
-        if (role == Role.CANDIDATE && hasReachedElectionTimeout()) return machine.startElection()
+        if (role == Role.FOLLOWER && communicationTimedOut()) return nodeAfterProcessing.startElection()
+        if (role == Role.CANDIDATE && hasReachedElectionTimeout()) return nodeAfterProcessing.startElection()
 
-        return machine
+        return nodeAfterProcessing
     }
 
 
