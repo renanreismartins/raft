@@ -54,16 +54,14 @@ data class StateMachine(
         val machine = tickMessages
             .fold(this)
             { machine, message ->
-                when (message) {
-                    is RequestForVotes -> return requestForVotesHandler(machine, message)
+                 when (message) {
+                    is RequestForVotes -> requestForVotesHandler(machine, message)
                     is AppendEntry -> TODO()
                     is AppendEntryResponse -> TODO()
                     is ClientCommand -> TODO()
-                    is Heartbeat -> TODO()
+                    is Heartbeat -> this //TODO
                     is VoteFromFollower -> TODO()
-                }
-
-                machine.add(message.toReceived())
+                }.add(message.toReceived())
             }
 
         if (role == Role.FOLLOWER && communicationTimedOut()) return machine.startElection()
