@@ -31,4 +31,19 @@ class StateMachineTests {
             newNodeB.received()
         )
     }
+
+    @Test
+    fun `A Node store a message after its receival`() {
+        // Given
+        val network = Network()
+        val message = Heartbeat(Source("127.0.0.1", 9002), Destination("127.0.0.1", 9001), 0, "")
+        network.add(message)
+        val node = StateMachine(Source("127.0.0.1", 9001), "NodeA", network = network, peers = listOf())
+
+        // When
+        val (_, nodeWithMessage) = TimeMachine2(network, node).tick()
+
+        // Then
+        assertEquals(message, nodeWithMessage.received().first().message)
+    }
 }
