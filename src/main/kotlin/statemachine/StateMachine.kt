@@ -60,7 +60,10 @@ data class StateMachine(
                     is AppendEntryResponse -> TODO()
                     is ClientCommand -> TODO()
                     is Heartbeat -> this //TODO
-                    is VoteFromFollower -> TODO()
+                    is VoteFromFollower -> {
+                        Intentionally breaking the code to know
+                                where to continue
+                    }
                 }.add(message.toReceived())
             }
 
