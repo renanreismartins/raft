@@ -4,6 +4,7 @@ import org.example.Config
 import org.example.Destination
 import org.example.Network
 import org.example.Source
+import org.example.VoteFromFollower
 import org.example.statemachine.Role
 import org.example.statemachine.StateMachine
 import org.example.statemachine.TimeMachine2
@@ -43,10 +44,31 @@ class StateMachineElectionTest {
 
         // Then Candidate got promoted and sent its Request for Votes to the Follower
         assertEquals(Role.CANDIDATE, becameCandidate.role)
+
+        //Receives a vote from himself
+        assertEquals(setOf(willPromoteAddress), becameCandidate.votesReceived)
+
         assertEquals(Role.FOLLOWER, remainedFollower.role)
         assertEquals(
             "REQUEST FOR VOTES",
             remainedFollower.received().first().message.content
+        )
+
+
+        // When the Nodes Vote for the Candidate
+        val (_, candidateWithVotes, followerAfterVote) = timeMachine.tick()
+
+        // Candidate receives the vote
+        // TODO check candidate state after computing the vote
+        assertEquals(
+            candidateWithVotes.received().first().message,
+            VoteFromFollower(
+                followerAfterVote.address,
+                Destination.from(willPromoteAddress),
+                0,
+                "VOTE FROM FOLLOWER",
+                true
+            )
         )
 
         // Leader gets elected
