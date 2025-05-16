@@ -94,6 +94,11 @@ data class StateMachine(
 
     // <Candidate>
     fun hasReachedElectionTimeout(): Boolean = network.clock - termStartedAt!! >= config.electionTimeout
+
+    fun voteForItself(): StateMachine = this.copy(
+        votedFor = this.address,
+        votesReceived = this.votesReceived.plus(this.address)
+    )
     // </Candidate>
 
     // <Candidate and Follower>
@@ -106,11 +111,9 @@ data class StateMachine(
         return this.copy(
             role = Role.CANDIDATE,
             term = term + 1,
-            votedFor = address,
-            votesReceived = setOf(address),
             messages = messages.toSend(requestForVotes),
             termStartedAt = network.clock
-        )
+        ).voteForItself()
     }
     // </Candidate and Follower>
 
