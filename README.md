@@ -79,3 +79,24 @@ A Node votes for a Candidate if three conditions are met.
 3 - The Log of the candidate is more up to date than the current Node. That is verified checking if the Candidate Log Term is higher than the Last Log Term of the current node. Or if the Logs are on the same term, then the Candidate's log must be bigger than the current Node's log.
 
 If one of the previous conditions are not met then the Node should respond with a negative vote.
+
+<h2>Raft(3/9) - Candidate Receiving Votes</h2>
+When a Vote is received, if the Term of the vote is higher than the Term in the receiving Node, the current Node is outdated. The Node's Term has to be updated as the Term from the Vote, the Node must be Demoted to Follower, its Vote Record (votedFor) deleted, as it voted for itself previously. Finally, the election timeout must be canceled.
+
+<h3>Computing a Vote</h3>
+For a Node to accept a Vote it needs to be a Candidate, the Term for the Vote be the same as its Term and the Vote to have been granted as positive (agrees = true).
+
+If all the conditions are met, then the Vote should be stored in Votes Received. Note that Votes Received is a set, so this operation is idempotent.
+
+And if the candidate has the quorum (more than 50% of the participants), the Node can be Promoted to Leader.
+
+During the Promotion step Kleppmann is using a flag (currentLeader) to sign that. This implementation accounts for that in different ways, checking the role or even other mechanisms when refactoring for a interfaces hierarch.
+
+The Election timeout has to be canceled and for each of the other Nodes the log must be replicated.
+
+<h3>Log Replication Controls Initialization</h3>
+The Log Replication will be fully implemented in the next steps. At this point, the Leader will only have the state that controls what to send to each of the other Nodes initialized.
+
+The Number of Logs Records that the Leader already sent to the other Nodes must be initialized as the Log Length, this assumes that the other Nodes have already received all entries the Leader has. If that is not true, the Log Replication process will adjust the information: (sentLength[follower] = log.length)
+
+The Number of Log Records that the other Node has already acknowledged. It should assume nothing was acknowledged yet and as the Leader receives the acknowledgements, this number will increase: (ackedLength[followe] = 0)

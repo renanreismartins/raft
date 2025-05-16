@@ -16,12 +16,15 @@ import org.example.RequestForVotes
 import org.example.Source
 import org.example.VoteFromFollower
 import org.example.statemachine.messagehandlers.requestForVotesHandler
+import org.example.statemachine.messagehandlers.voteHandler
 
 enum class Role {
     FOLLOWER,
     CANDIDATE,
     LEADER
 }
+
+val CLUSTER_SIZE = 3
 
 data class StateMachine(
     val address: Source,
@@ -40,8 +43,15 @@ data class StateMachine(
     // <Candidate>
     // this was derived from the received messages. See: shouldBecomeLeader() in the old impl
     val votesReceived: Set<Address> = emptySet(),
-    val termStartedAt: Int? = null,
+    val termStartedAt: Int? = null, // TODO call it Election Clock?
     // </Candidate>
+
+    // <Leader>
+    // This setLength is called nextIndex in the paper
+    val setLength: Map<Destination, Int> = peers.associateWith { log.size() },
+    // This ackedLength is called matchIndex in the paper
+    val ackedLength: Map<Destination, Int> = peers.associateWith { 0 },
+    // </Leader>
 ) {
 
     /*
@@ -60,10 +70,7 @@ data class StateMachine(
                     is AppendEntryResponse -> TODO()
                     is ClientCommand -> TODO()
                     is Heartbeat -> this //TODO
-                    is VoteFromFollower -> {
-                        Intentionally breaking the code to know
-                                where to continue
-                    }
+                    is VoteFromFollower -> voteHandler(machine, message)
                 }.add(message.toReceived())
             }
 
@@ -116,7 +123,6 @@ data class StateMachine(
         ).voteForItself()
     }
     // </Candidate and Follower>
-
 
     fun toSend(message: Message): StateMachine = this.copy(messages = messages.toSend(message))
 
