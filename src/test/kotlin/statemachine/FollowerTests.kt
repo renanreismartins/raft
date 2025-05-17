@@ -38,7 +38,7 @@ class FollowerTests {
                 RequestForVotes(
                     followerAddress,
                     peerAddress,
-                    0,
+                    1,
                     "REQUEST FOR VOTES",
                     0),
                 5)
