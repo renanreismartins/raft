@@ -100,3 +100,24 @@ The Log Replication will be fully implemented in the next steps. At this point, 
 The Number of Logs Records that the Leader already sent to the other Nodes must be initialized as the Log Length, this assumes that the other Nodes have already received all entries the Leader has. If that is not true, the Log Replication process will adjust the information: (sentLength[follower] = log.length)
 
 The Number of Log Records that the other Node has already acknowledged. It should assume nothing was acknowledged yet and as the Leader receives the acknowledgements, this number will increase: (ackedLength[followe] = 0)
+
+<h2>raft(4/9) - Broadcasting Messages</h2>
+When receiving a Command from a Client, if the Node is not a Leader, it should redirect the receiving messages to the Leader via FIFO (First In, First Out).
+
+**I'm not sure if the Candidate also should do the same. I will assume it will.**
+
+When the Leader receives the Client Command, does not matter if via another Node or straight from the Client, it must append the Command (Message) to its Log, the Log must contain the Current Term of the Leader. The Command coming from the Clients should not be aware of the Leader Term, thus a new type might be needed.
+
+TODO: When adding the new type, it would still be considered a Message, to be handled sequentially. A type outside the Message interface would have to be handled before or after the other messages arrivals. 
+
+The Leader must set the ackLength of itself to the size of its Log: ackLength[log.size]
+This signals that the Node (itself) has acked the Log until that point.
+Then the Leader myst replicate its Log to all its Peers.
+
+TODO: When a non Leader receives a Client Command, it must forward to the Leader. The implementation still do not have a mechanism that changes the state of the Followers to know the last elected Leader.
+
+<h3>Heartbeats</h3>
+To prevent a new Election to start when the Leader is still alive, the Leader sends Heartbeats.
+The Heartbeat timeout must be calculated to be of a shorter time than the Election Timeout added of the time the Heartbeat takes to arrive at the other Nodes.
+
+The Heartbeats implementation is the same as the Log Replication and do not have its own Message type as in the previous implementation.

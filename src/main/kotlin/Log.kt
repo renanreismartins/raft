@@ -2,7 +2,7 @@ package org.example
 
 // TODO: Log should not contain 'Message's, instead it should ONLY contain entries for the state machine (AppendEntries/ClientCommand)
 //       make a new type to represent the required info just for Log.
-class Log(
+data class Log(
     val messages: List<Message> = emptyList(),
 ) {
     fun add(message: Message): Log =
