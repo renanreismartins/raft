@@ -27,7 +27,6 @@ fun voteHandler(node: StateMachine, vote: VoteFromFollower): StateMachine {
                 .copy(role = Role.LEADER)
                 .copy(setLength = nodeWithVote.peers.associateWith { nodeWithVote.log.size() })
                 .copy(ackedLength = nodeWithVote.peers.associateWith { 0 })
-                .copy(termStartedAt = 0)
 
             // TODO REPLICATE LOG(leader address, followers)
             return leader

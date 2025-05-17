@@ -64,7 +64,7 @@ data class StateMachine(
         val nodeAfterProcessing = tickMessages
             .fold(this)
             { machine, message ->
-                 when (message) {
+                when (message) {
                     is RequestForVotes -> requestForVotesHandler(machine, message)
                     is AppendEntry -> TODO()
                     is AppendEntryResponse -> TODO()
@@ -79,7 +79,6 @@ data class StateMachine(
 
         return nodeAfterProcessing
     }
-
 
 
     fun tick(): StateMachine {
@@ -110,17 +109,22 @@ data class StateMachine(
 
     // <Candidate and Follower>
     fun startElection(): StateMachine {
-        //TODO check if this could be log.prevLogTerm
-        //TODO test lastTerm logic
-        val lastTerm = if (log.size() > 0) log.messages.last().term else 0
-        val requestForVotes = peers.map { peer -> RequestForVotes(this.address, peer, term, "REQUEST FOR VOTES", lastTerm, log.size()) }
-
         return this.copy(
             role = Role.CANDIDATE,
             term = term + 1,
-            messages = messages.toSend(requestForVotes),
             termStartedAt = network.clock
-        ).voteForItself()
+        )
+        .voteForItself()
+        .requestVotes()
+    }
+
+    fun requestVotes(): StateMachine {
+        //TODO check if this could be log.prevLogTerm
+        //TODO test lastTerm logic
+        val lastTerm = if (log.size() > 0) log.messages.last().term else 0
+        val requestForVotes =
+            peers.map { peer -> RequestForVotes(this.address, peer, term, "REQUEST FOR VOTES", lastTerm, log.size()) }
+        return this.copy(messages = messages.toSend(requestForVotes))
     }
     // </Candidate and Follower>
 
