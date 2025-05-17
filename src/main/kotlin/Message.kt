@@ -37,7 +37,14 @@ data class Heartbeat(
     override val content: String,
 ) : Message(src, dest, term, content)
 
-// TODO should not know about the term
+/**
+ *
+ * TODO should not know about the term
+ * Suggestion: Create a ClientCommandApi and move the Term down the Message to its implementations.
+ * In the Message handler do a NoOp when ClientCommand arrives
+ * This way the order of the messages is preserved
+ *
+ * */
 data class ClientCommand(
     override val src: Source,
     override val dest: Destination,
