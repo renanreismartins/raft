@@ -12,14 +12,14 @@ fun voteHandler(node: StateMachine, vote: VoteFromFollower): StateMachine {
             role = Role.FOLLOWER,
             votedFor = null,
             votesReceived = emptySet(), // Not in Kleppmann explanation, Follower will not have this attribute when demoted.
-            termStartedAt = 0  // Not in Kleppmann explanation
+            termStartedAt = null  // Not in Kleppmann explanation
         )
     }
 
     if (node.role == Role.CANDIDATE && vote.term == node.term && vote.agrees) {
         val nodeWithVote = node
             .copy(votesReceived = node.votesReceived.plus(vote.src))
-            .copy(termStartedAt = 0)
+            .copy(termStartedAt = null)
         // TODO if needed: current leader = node.address
 
         if (nodeWithVote.votesReceived.size >= (CLUSTER_SIZE + 1) / 2) {
