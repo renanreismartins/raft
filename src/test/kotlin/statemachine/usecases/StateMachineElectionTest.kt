@@ -34,7 +34,7 @@ class StateMachineElectionTest {
                 remainsFollowerAddress,
                 "NodeB",
                 network = network,
-                peers = Destination.from(listOf(remainsFollowerAddress)),
+                peers = Destination.from(listOf(willPromoteAddress)),
                 config = Config(10),
             )
 
@@ -54,24 +54,24 @@ class StateMachineElectionTest {
             remainedFollower.received().first().message.content
         )
 
-
         // When the Nodes Vote for the Candidate
-        val (_, candidateWithVotes, followerAfterVote) = timeMachine.tick()
+        val (_, leader, followerAfterVote) = timeMachine.tick()
 
-        // Candidate receives the vote
+        // Candidate receives the vote and as it has the quorum, it is promoted to leader
+        assertEquals(Role.LEADER, leader.role)
+
         // TODO check candidate state after computing the vote
         assertEquals(
-            candidateWithVotes.received().first().message,
+            leader.received().first().message,
             VoteFromFollower(
                 followerAfterVote.address,
                 Destination.from(willPromoteAddress),
-                0,
+                1,
                 "VOTE FROM FOLLOWER",
                 true
             )
         )
 
-        // Leader gets elected
-        // Check previous impl
+
     }
 }
