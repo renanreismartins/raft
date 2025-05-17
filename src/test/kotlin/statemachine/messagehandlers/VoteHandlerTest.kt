@@ -64,7 +64,7 @@ class VoteHandlerTest {
         val followerAddress1 = Destination("127.0.0.1", 9002)
         val followerAddress2 = Destination("127.0.0.1", 9003)
 
-        // Meaningless Log to test setLength
+        // Meaningless Log to test sentLength
         val log = Log(listOf(Heartbeat(candidateAddress, followerAddress1, 0, "")))
 
         val candidate = StateMachine(
@@ -97,12 +97,12 @@ class VoteHandlerTest {
 
         // Then it should have been promoted to Leader if it has quorum
         assertEquals(Role.LEADER, leader.role)
-        val expectedSetLength = mapOf(
+        val expectedSentLength = mapOf(
             followerAddress1 to 1,
             followerAddress2 to 1
         )
 
-        assertEquals(expectedSetLength, leader.setLength)
+        assertEquals(expectedSentLength, leader.sentLength)
 
         val expectedAckedLength = mapOf(
             followerAddress1 to 0,

@@ -25,7 +25,7 @@ fun voteHandler(node: StateMachine, vote: VoteFromFollower): StateMachine {
         if (nodeWithVote.votesReceived.size >= (CLUSTER_SIZE + 1) / 2) {
             val leader = nodeWithVote
                 .copy(role = Role.LEADER)
-                .copy(setLength = nodeWithVote.peers.associateWith { nodeWithVote.log.size() })
+                .copy(sentLength = nodeWithVote.peers.associateWith { nodeWithVote.log.size() })
                 .copy(ackedLength = nodeWithVote.peers.associateWith { 0 })
 
             // TODO REPLICATE LOG(leader address, followers)

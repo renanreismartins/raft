@@ -47,8 +47,11 @@ data class StateMachine(
     // </Candidate>
 
     // <Leader>
-    // This setLength is called nextIndex in the paper
-    val setLength: Map<Destination, Int> = peers.associateWith { log.size() },
+    // These could be encapsulated collections that would accept
+    // Address in a method to return its value.
+
+    // This sentLength is called nextIndex in the paper
+    val sentLength: Map<Destination, Int> = peers.associateWith { log.size() },
     // This ackedLength is called matchIndex in the paper
     val ackedLength: Map<Destination, Int> = peers.associateWith { 0 },
     // </Leader>
