@@ -50,8 +50,7 @@ class VoteHandlerTest {
         assertEquals(emptySet(), demotedCandidate.votesReceived)
 
         // Cancels the election
-        assertEquals(0, demotedCandidate.termStartedAt)
-
+        assertNull(demotedCandidate.termStartedAt)
         assertNull(demotedCandidate.votedFor)
     }
 
