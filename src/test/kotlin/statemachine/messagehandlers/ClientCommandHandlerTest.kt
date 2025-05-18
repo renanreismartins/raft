@@ -2,7 +2,8 @@ package statemachine.messagehandlers
 
 import org.example.ClientCommand
 import org.example.Destination
-import org.example.Log
+import org.example.Entry
+import org.example.Log2
 import org.example.Network
 import org.example.Source
 import org.example.statemachine.Role
@@ -44,11 +45,11 @@ class ClientCommandHandlerTest {
 
         // Then it adds the command to its Log
         assertEquals(
-            Log(listOf(command.copy(term = 1))),
+            Log2(listOf(Entry(command.content, 1))),
             leaderWithCommand.log
         )
 
-        // Then it acks itself
+        // Then it ack itself
         assertEquals(
             mapOf(
                 followerAddress to 2,
