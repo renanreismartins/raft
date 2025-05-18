@@ -108,11 +108,11 @@ When receiving a Command from a Client, if the Node is not a Leader, it should r
 
 When the Leader receives the Client Command, does not matter if via another Node or straight from the Client, it must append the Command (Message) to its Log, the Log must contain the Current Term of the Leader. The Command coming from the Clients should not be aware of the Leader Term, thus a new type might be needed.
 
-TODO: When adding the new type, it would still be considered a Message, to be handled sequentially. A type outside the Message interface would have to be handled before or after the other messages arrivals. 
+TODO: When adding the new type, it would still be considered a Message, to be handled sequentially. A type outside the Message interface would have to be handled before or after the other messages arrivals, because it is not part of the same collection.
 
-The Leader must set the ackLength of itself to the size of its Log: ackLength[log.size]
-This signals that the Node (itself) has acked the Log until that point.
-Then the Leader myst replicate its Log to all its Peers.
+The Leader must set the ackLength of itself to the size of its Log: ackLength[log.size], this signals that
+the Node (itself) has acked the Log until that point.
+Then the Leader must replicate its Log to all its Peers.
 
 TODO: When a non Leader receives a Client Command, it must forward to the Leader. The implementation still do not have a mechanism that changes the state of the Followers to know the last elected Leader.
 
@@ -121,3 +121,9 @@ To prevent a new Election to start when the Leader is still alive, the Leader se
 The Heartbeat timeout must be calculated to be of a shorter time than the Election Timeout added of the time the Heartbeat takes to arrive at the other Nodes.
 
 The Heartbeats implementation is the same as the Log Replication and do not have its own Message type as in the previous implementation.
+
+<h2>Raft (5/9) - Replicating from Leader to Followers Log Replication</h2>
+The Leader replicates the Log Entries it believes it have not yet sent to the Followers.
+This is done via the 'prefixLen', that is the index of the last Entry sent to a particular Follower: sentLength[ follower ].
+
+It 'slices' its log from that the prefixLen until the end of the Log. It sends to the Follower the missing Entries and with that the Term of the last not sent Entry. This is similar to the Last Term of the Log, but considering only the sent messages to the particular Follower. If there are no Entries, the Term is 0.
