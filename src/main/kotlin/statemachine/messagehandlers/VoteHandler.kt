@@ -6,6 +6,7 @@ import org.example.statemachine.Role
 import org.example.statemachine.StateMachine
 
 fun voteHandler(node: StateMachine, vote: VoteFromFollower): StateMachine {
+    //TODO CHECK ALL PLACES THE ROLE IS CHANGED AND RESET VARIABLES (TIMERS, VOTED FOR, ETC)
     if (vote.term > node.term) {
         return node.copy(
             term = vote.term,
@@ -28,8 +29,7 @@ fun voteHandler(node: StateMachine, vote: VoteFromFollower): StateMachine {
                 .copy(sentLength = nodeWithVote.peers.associateWith { nodeWithVote.log.size() })
                 .copy(ackedLength = nodeWithVote.peers.associateWith { 0 })
 
-            // TODO REPLICATE LOG(leader address, followers)
-            return leader
+            return leader.replicateLog()
         }
 
         return nodeWithVote
