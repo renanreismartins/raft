@@ -21,7 +21,7 @@ fun requestForVotesHandler(node: StateMachine, message: RequestForVotes): StateM
 
     //TODO check if this could be log.prevLogTerm
     //TODO test lastTerm logic
-    val lastTerm = if (newNode.log.size() > 0) newNode.log.messages.last().term else 0
+    val lastTerm = if (newNode.log.size() > 0) newNode.log.entries.last().term else 0
 
     val candidatesLogHasHigherTerm = message.lastLogTerm > lastTerm
     val candidateHasMoreLogEntries = message.lastLogTerm == lastTerm && message.logLength >= newNode.log.size()

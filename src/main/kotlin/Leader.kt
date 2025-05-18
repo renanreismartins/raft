@@ -1,7 +1,5 @@
 package org.example
 
-import java.util.logging.Logger
-
 // TODO maybe we should make all the constructors except the Followe as private
 // this way all nodes can only be initialized as Follower and only transition to a new
 // state thought the state machine
@@ -49,6 +47,8 @@ data class Leader(
                     nextIndex = this.nextIndex + (senderKey to currentNextIndex - 1),
                 )
             }
+
+            is AppendEntries -> TODO()
         }
     }
 

@@ -62,6 +62,16 @@ data class AppendEntry(
     val leaderCommit: Int,
 ) : Message(src, dest, term, content)
 
+data class AppendEntries(
+    override val src: Source,
+    override val dest: Destination,
+    override val term: Int = 0,
+    val prefixLen: Int,
+    val prefixTerm: Int,
+    val commitLength: Int,
+    val entries: List<Entry>
+) : Message(src, dest, term, "")
+
 data class AppendEntryResponse(
     override val src: Source,
     override val dest: Destination,
