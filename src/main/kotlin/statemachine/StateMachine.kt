@@ -83,9 +83,7 @@ data class StateMachine(
 
         if (role == Role.FOLLOWER && communicationTimedOut()) return nodeAfterProcessing.startElection()
         if (role == Role.CANDIDATE && hasReachedElectionTimeout()) return nodeAfterProcessing.startElection()
-
-        //TODO Maybe move this clock reset to the log replication?
-        if (role == Role.LEADER && hasHeartbeatTimedOut()) return this.copy(sentHeartbeatAt = network.clock)
+        if (role == Role.LEADER && hasHeartbeatTimedOut()) return this.replicateLog()
 
         return nodeAfterProcessing
     }
@@ -161,4 +159,37 @@ data class StateMachine(
 
     private fun flushMessages(): StateMachine =
         this.copy(messages = messages.flush(network.clock))
+
+    fun replicateLog(): StateMachine {
+        val entries: List<AppendEntries> = peers.map { replicateLog(it) }
+        // TODO add toSend(List<Message>) instead fo the fold
+        return entries
+            .fold(this) { acc, t -> acc.toSend(t) }
+            .copy(sentHeartbeatAt = network.clock) // TODO resetHeartbeatClock()
+    }
+
+    fun replicateLog(follower: Destination): AppendEntries {
+        //TODO sentLength was already set in the election, verify if defensive check (default value) is needed here
+        val prefixLen = sentLength.getOrDefault(follower, 0)
+
+        val suffix = log.entries.slice(prefixLen until log.size())
+
+        // Term of the last prefix entry or 0
+        // - 1 because of 0 index nature of the List
+        //TODO encapsulate this behaviour eg getLastTermForFollower()
+        val prefixTerm =
+            if (prefixLen > 0) log.entries[prefixLen - 1].term
+            else 0
+
+        return AppendEntries(
+            this.address,
+            follower,
+            this.term,
+            prefixLen,
+            prefixTerm,
+            commitIndex,
+            suffix
+        )
+
+    }
 }
