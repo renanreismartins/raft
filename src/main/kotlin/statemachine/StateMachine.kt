@@ -50,9 +50,11 @@ data class StateMachine(
     // <Leader>
     // These could be encapsulated collections that would accept
     // Address in a method to return its value.
-
     // This sentLength is called nextIndex in the paper
     val sentLength: Map<Destination, Int> = peers.associateWith { log.size() },
+
+    val sentHeartbeatAt: Int? = null,
+
     // This ackedLength is called matchIndex in the paper
     val ackedLength: Map<Destination, Int> = peers.associateWith { 0 },
     // </Leader>
@@ -82,6 +84,9 @@ data class StateMachine(
         if (role == Role.FOLLOWER && communicationTimedOut()) return nodeAfterProcessing.startElection()
         if (role == Role.CANDIDATE && hasReachedElectionTimeout()) return nodeAfterProcessing.startElection()
 
+        //TODO Maybe move this clock reset to the log replication?
+        if (role == Role.LEADER && hasHeartbeatTimedOut()) return this.copy(sentHeartbeatAt = network.clock)
+
         return nodeAfterProcessing
     }
 
@@ -102,6 +107,7 @@ data class StateMachine(
             received().isNotEmpty() && network.clock - received().last().receivedAt >= config.heartbeatTimeout
         return hasReachedFirstTimeoutAfterStartup || hasReachedTimeoutWithLastMessage
     }
+    // <//Follower>
 
     // <Candidate>
     fun hasReachedElectionTimeout(): Boolean = network.clock - termStartedAt!! >= config.electionTimeout
@@ -132,6 +138,12 @@ data class StateMachine(
         return this.copy(messages = messages.toSend(requestForVotes))
     }
     // </Candidate and Follower>
+
+    // <Leader>
+    fun hasHeartbeatTimedOut(): Boolean {
+        return network.clock - sentHeartbeatAt!! >= config.heartbeatTimeout
+    }
+    // </Leader>
 
     fun toSend(message: Message): StateMachine = this.copy(messages = messages.toSend(message))
 
