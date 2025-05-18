@@ -1,8 +1,8 @@
 package statemachine.messagehandlers
 
 import org.example.Destination
-import org.example.Heartbeat
-import org.example.Log
+import org.example.Entry
+import org.example.Log2
 import org.example.Network
 import org.example.Source
 import org.example.VoteFromFollower
@@ -65,7 +65,7 @@ class VoteHandlerTest {
         val followerAddress2 = Destination("127.0.0.1", 9003)
 
         // Meaningless Log to test sentLength
-        val log = Log(listOf(Heartbeat(candidateAddress, followerAddress1, 0, "")))
+        val log = Log2(listOf(Entry("ADD 1", 0)))
 
         val candidate = StateMachine(
             address = candidateAddress,

@@ -56,6 +56,7 @@ data class Candidate(
 
             }
             is AppendEntryResponse -> this
+            is AppendEntries -> TODO()
         }
     }
 

@@ -40,3 +40,10 @@ data class Log(
      */
     fun size(): Int = messages.size
 }
+
+data class Entry(val content: String, val term: Int)
+
+data class Log2(val entries: List<Entry> = emptyList()) {
+    fun add(entry: Entry): Log2 = Log2(entries = this.entries + entry)
+    fun size(): Int = entries.size
+}

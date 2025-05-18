@@ -1,8 +1,8 @@
 package statemachine.messagehandlers
 
 import org.example.Destination
-import org.example.Heartbeat
-import org.example.Log
+import org.example.Entry
+import org.example.Log2
 import org.example.Network
 import org.example.RequestForVotes
 import org.example.Source
@@ -77,7 +77,7 @@ class RequestForVotesHandlerTest {
 
         // Given
         val votingNodeAddress = Source("127.0.0.1", 9001)
-        val log = Log(listOf(Heartbeat(votingNodeAddress, Destination("127.0.0.1", 9003), 3, "")))
+        val log = Log2(listOf(Entry("ADD 1", 3)))
 
         val votingNode = StateMachine(
             address = votingNodeAddress,
@@ -125,9 +125,9 @@ class RequestForVotesHandlerTest {
 
         // Given
         val votingNodeAddress = Source("127.0.0.1", 9001)
-        val log = Log(listOf(
-            Heartbeat(votingNodeAddress, Destination("127.0.0.1", 9003), 3, ""),
-            Heartbeat(votingNodeAddress, Destination("127.0.0.1", 9003), 3, "")
+        val log = Log2(listOf(
+            Entry("ADD 1", 3),
+            Entry("ADD 4", 3)
         ))
 
         val votingNode = StateMachine(
@@ -176,7 +176,7 @@ class RequestForVotesHandlerTest {
 
         // Given
         val votingNodeAddress = Source("127.0.0.1", 9001)
-        val log = Log(listOf(Heartbeat(votingNodeAddress, Destination("127.0.0.1", 9003), 3, "")))
+        val log = Log2(listOf(Entry("ADD 1", 3)))
 
         val votingNode = StateMachine(
             address = votingNodeAddress,

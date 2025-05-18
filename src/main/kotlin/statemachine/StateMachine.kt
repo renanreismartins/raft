@@ -2,12 +2,13 @@ package org.example.statemachine
 
 import org.example.Address
 import org.example.AppendEntry
+import org.example.AppendEntries
 import org.example.AppendEntryResponse
 import org.example.ClientCommand
 import org.example.Config
 import org.example.Destination
 import org.example.Heartbeat
-import org.example.Log
+import org.example.Log2
 import org.example.Message
 import org.example.Messages
 import org.example.Network
@@ -34,7 +35,7 @@ data class StateMachine(
     val peers: List<Destination>,
     val votedFor: Address? = null,
     val messages: Messages = Messages(),
-    val log: Log = Log(),
+    val log: Log2 = Log2(),
     val term: Int = 0,
     val config: Config = Config(),
     val commitIndex: Int = 0,
@@ -74,6 +75,7 @@ data class StateMachine(
                     is ClientCommand -> TODO()
                     is Heartbeat -> this //TODO
                     is VoteFromFollower -> voteHandler(machine, message)
+                    is AppendEntries -> TODO()
                 }.add(message.toReceived())
             }
 
@@ -124,7 +126,7 @@ data class StateMachine(
     fun requestVotes(): StateMachine {
         //TODO check if this could be log.prevLogTerm
         //TODO test lastTerm logic
-        val lastTerm = if (log.size() > 0) log.messages.last().term else 0
+        val lastTerm = if (log.size() > 0) log.entries.last().term else 0
         val requestForVotes =
             peers.map { peer -> RequestForVotes(this.address, peer, term, "REQUEST FOR VOTES", lastTerm, log.size()) }
         return this.copy(messages = messages.toSend(requestForVotes))

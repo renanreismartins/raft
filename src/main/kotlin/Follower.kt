@@ -30,6 +30,7 @@ data class Follower(
             is VoteFromFollower -> this
             is ClientCommand -> this
             is AppendEntryResponse -> this
+            is AppendEntries -> TODO()
         }
 
     override fun tickWithoutSideEffects(): Node {
