@@ -1,5 +1,6 @@
 package statemachine.messagehandlers
 
+import org.example.AppendEntries
 import org.example.ClientCommand
 import org.example.Destination
 import org.example.Entry
@@ -11,6 +12,7 @@ import org.example.statemachine.StateMachine
 import org.example.statemachine.messagehandlers.clientCommandHandler
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import kotlin.test.assertIs
 
 class ClientCommandHandlerTest {
 
@@ -58,7 +60,7 @@ class ClientCommandHandlerTest {
             leaderWithCommand.ackedLength
         )
 
-        //TODO check log replication
+        assertIs<AppendEntries>(leaderWithCommand.messages.toSend.first())
     }
 
     @Test

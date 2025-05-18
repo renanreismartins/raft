@@ -1,5 +1,6 @@
 package statemachine.messagehandlers
 
+import org.example.AppendEntries
 import org.example.Destination
 import org.example.Entry
 import org.example.Log2
@@ -12,6 +13,7 @@ import org.example.statemachine.messagehandlers.voteHandler
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.test.assertNull
 
 class VoteHandlerTest {
@@ -55,7 +57,7 @@ class VoteHandlerTest {
     }
 
     @Test
-    fun `Candidate should receive a vote if the Vote Term is the same as its Term and the Vote is positive`() {
+    fun `Candidate should receive a vote if the Vote Term is the same as its Term and the Vote is positive, then gets promoted to Leader`() {
         // Given
         val network = Network()
 
@@ -86,9 +88,9 @@ class VoteHandlerTest {
             true
         )
 
+
         // When a Candidate Receives a valid and positive Vote
         val leader = voteHandler(candidate, vote)
-
 
         // Then it should have the vote from itself and the follower vote
         assertEquals(2, leader.votesReceived.size)
@@ -110,6 +112,6 @@ class VoteHandlerTest {
         )
         assertEquals(expectedAckedLength, leader.ackedLength)
 
-        //TODO TEST HERE THE LOG REPLICATION THAT WILL BE ADDED IN THE FUTURE
+        assertIs<AppendEntries>(leader.messages.toSend.first())
     }
 }

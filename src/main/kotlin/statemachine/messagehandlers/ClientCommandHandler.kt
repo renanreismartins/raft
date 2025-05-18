@@ -16,8 +16,7 @@ fun clientCommandHandler(node: StateMachine, command: ClientCommand): StateMachi
 
         val result = newNode.copy(ackedLength = node.ackedLength + (node.ackedLength + (Destination.from(node.address) to newNode.log.size())))
 
-        // TODO REPLICATE LOG(leader address, followers)
-        return result
+        return result.replicateLog()
     } else {
         return node.toSend(internalCommand)
     }
