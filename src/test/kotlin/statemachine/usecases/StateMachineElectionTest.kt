@@ -1,5 +1,6 @@
 package statemachine.usecases
 
+import org.example.AppendEntries
 import org.example.Config
 import org.example.Destination
 import org.example.Network
@@ -10,6 +11,7 @@ import org.example.statemachine.StateMachine
 import org.example.statemachine.TimeMachine2
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 
 class StateMachineElectionTest {
     @Test
@@ -58,9 +60,11 @@ class StateMachineElectionTest {
         val (_, leader, followerAfterVote) = timeMachine.tick()
 
         // Candidate receives the vote and as it has the quorum, it is promoted to leader
+        assertEquals(
+            setOf(willPromoteAddress, remainsFollowerAddress),
+            leader.votesReceived
+        )
         assertEquals(Role.LEADER, leader.role)
-
-        // TODO check candidate state after computing the vote
         assertEquals(
             leader.received().first().message,
             VoteFromFollower(
@@ -72,6 +76,7 @@ class StateMachineElectionTest {
             )
         )
 
-
+        // Sent an AppendEntries
+        assertIs<AppendEntries>(leader.messages.sent.last())
     }
 }
