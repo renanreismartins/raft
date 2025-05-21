@@ -127,3 +127,23 @@ The Leader replicates the Log Entries it believes it have not yet sent to the Fo
 This is done via the 'prefixLen', that is the index of the last Entry sent to a particular Follower: sentLength[ follower ].
 
 It 'slices' its log from that the prefixLen until the end of the Log. It sends to the Follower the missing Entries and with that the Term of the last not sent Entry. This is similar to the Last Term of the Log, but considering only the sent messages to the particular Follower. If there are no Entries, the Term is 0.
+
+<h2>Raft (6/9) - Other Nodes Receiving the Log Replication</h2>
+The Node receiving the Log replication must do the usual Term check: if the Term in the Message is higher than its current Term it should update its Term, reset the Vote record and cancel the Election timer.
+
+If the Term in the message is the SAME as the Node Term, then the Node must set the Current Leader record to the Message Sender and Demote itself to Follower. It seems quite common that a Node will receive an AppendEntries (Log Replication) message with the same Term as its own, and it seems odd that the Node should perform the two previously mentioned steps at each Message. The explanation is that this might happen when the Node is a Candidate and receives a message from the Leader in the same Election Term. However, Klepmann does not add a contidional based on the Node Role. This implementation will perform the Demotion and Current Leader record set, independently of the Node Role.
+
+<h3>Log Replication Checks</h3>
+In order to accept the Log Entries the receiving Node must verify if its Log is in accordance with the sent Entries. This is similar to the checks performed in the Log during the Leader election but slightly different.
+
+On the Leader Election we split the Log in a Prefix, that is what the Leader believe it has already sent to the Follower. For that, the receiving Node Log must be at least as long as the prefix sent in the Message, meaning the receiving Node must have a Log Size bigger or equal to the prefixLen sent in the Message.
+
+If it is not, it means there is a gap where the receiving Node does not have the Entries the Leader belive it has.
+
+The second requirement is that the prefixLen is 0, meaning there was nothing on the Leader to be sent.
+Or the Last Log Entry Term of the prefix is the same as the prefixTerm (prefixTerm is the corresponding Log Entry Term in the Leader). Raft has an invariant where if there are two Nodes in the system and if the Log Entries at the same Index have the same Term, then the protocol guarantees that the Log up to that index is identical.
+
+To efficiently check if two Nodes have identical Logs up to a certain index, it is just matter of checking if the Term of the Entries of the same index are the same. That is what the previous conditions are guaranteeing.
+
+<h3>Log Response</h3>
+The ACK sent in the Response, in Kleppmann's implementation, is calculated in the Follower receiving the Log Entries. However, the Leader knows the prefixLen and the suffix length, so a positive or negative Response would be sufficient and the Leader could calculate that value on its side. Klepmman's implementation will be followed here as the consequences of that change are unknown at the moment.

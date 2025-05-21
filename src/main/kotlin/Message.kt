@@ -80,6 +80,15 @@ data class AppendEntryResponse(
     val success: Boolean,
 ) : Message(src, dest, term, content)
 
+data class AppendEntriesResponse(
+    override val src: Source,
+    override val dest: Destination,
+    // TODO another message that does not need Term
+    override val content: String,
+    val ack: Int,
+    val success: Boolean,
+) : Message(src, dest, 0, content)
+
 data class SentMessage(
     val message: Message,
     val sentAt: Timestamp,

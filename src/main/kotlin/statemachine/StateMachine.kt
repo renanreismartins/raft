@@ -3,6 +3,7 @@ package org.example.statemachine
 import org.example.Address
 import org.example.AppendEntry
 import org.example.AppendEntries
+import org.example.AppendEntriesResponse
 import org.example.AppendEntryResponse
 import org.example.ClientCommand
 import org.example.Config
@@ -16,6 +17,7 @@ import org.example.ReceivedMessage
 import org.example.RequestForVotes
 import org.example.Source
 import org.example.VoteFromFollower
+import org.example.statemachine.messagehandlers.appendEntriesHandler
 import org.example.statemachine.messagehandlers.requestForVotesHandler
 import org.example.statemachine.messagehandlers.voteHandler
 
@@ -41,6 +43,7 @@ data class StateMachine(
     val commitIndex: Int = 0,
     val lastApplied: Int = 0,
     val role: Role = Role.FOLLOWER,
+    val currentLeader: Address? = null,
     // <Candidate>
     // this was derived from the received messages. See: shouldBecomeLeader() in the old impl
     val votesReceived: Set<Address> = emptySet(),
@@ -77,7 +80,8 @@ data class StateMachine(
                     is ClientCommand -> TODO()
                     is Heartbeat -> this //TODO
                     is VoteFromFollower -> voteHandler(machine, message)
-                    is AppendEntries -> TODO()
+                    is AppendEntries -> appendEntriesHandler(machine, message)
+                    is AppendEntriesResponse -> TODO()
                 }.add(message.toReceived())
             }
 

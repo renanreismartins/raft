@@ -49,6 +49,7 @@ data class Leader(
             }
 
             is AppendEntries -> TODO()
+            is AppendEntriesResponse -> TODO()
         }
     }
 
