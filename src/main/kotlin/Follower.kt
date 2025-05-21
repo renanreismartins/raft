@@ -31,6 +31,7 @@ data class Follower(
             is ClientCommand -> this
             is AppendEntryResponse -> this
             is AppendEntries -> TODO()
+            is AppendEntriesResponse -> TODO()
         }
 
     override fun tickWithoutSideEffects(): Node {
