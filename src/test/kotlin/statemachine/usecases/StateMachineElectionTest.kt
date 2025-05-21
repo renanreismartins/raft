@@ -77,6 +77,6 @@ class StateMachineElectionTest {
         )
 
         // Sent an AppendEntries
-        assertIs<AppendEntries>(leader.messages.sent.last())
+        assertIs<AppendEntries>(leader.messages.sent.last().message)
     }
 }
