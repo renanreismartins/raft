@@ -40,7 +40,7 @@ data class StateMachine(
     val log: Log2 = Log2(),
     val term: Int = 0,
     val config: Config = Config(),
-    val commitIndex: Int = 0,
+    val commitLength: Int = 0,
     val lastApplied: Int = 0,
     val role: Role = Role.FOLLOWER,
     val currentLeader: Address? = null,
@@ -191,7 +191,7 @@ data class StateMachine(
             this.term,
             prefixLen,
             prefixTerm,
-            commitIndex,
+            commitLength,
             suffix
         )
 
