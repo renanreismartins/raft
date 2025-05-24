@@ -5,6 +5,7 @@ import org.example.AppendEntriesResponse
 import org.example.Destination
 import org.example.statemachine.Role
 import org.example.statemachine.StateMachine
+import kotlin.math.min
 
 fun appendEntriesHandler(node: StateMachine, message: AppendEntries): StateMachine {
     val follower = if (message.term > node.term) {
@@ -53,4 +54,44 @@ fun appendEntriesHandler(node: StateMachine, message: AppendEntries): StateMachi
                 false
             )
         )
+}
+
+fun appendEntries(follower: StateMachine, message: AppendEntries): StateMachine {
+    val followerWithTruncatedLog = if (message.entries.size > 0 && follower.log.size() > message.prefixLen) {
+        val index = min(follower.log.size(), message.prefixLen + message.entries.size) - 1
+
+            if (follower.log.entries[index].term != message.entries[index - message.prefixLen].term) {
+            val truncatedEntries = follower.log.entries.slice(0 .. message.prefixLen - 1)
+            //OR follower.log.entries.slice(0 until message.prefixLen)
+            follower.copy(log = follower.log.copy(entries = truncatedEntries))
+        } else {
+            follower
+        }
+    } else {
+        follower
+    }
+
+    val followerWithAppendedSuffix = if (message.prefixLen + message.entries.size > followerWithTruncatedLog.log.size()) {
+        val startSuffix = followerWithTruncatedLog.log.size() - message.prefixLen
+        val endSuffix = message.entries.size - 1
+        val suffixEntries = message.entries.slice(startSuffix .. endSuffix)
+        val logWithAppendedSuffix = followerWithTruncatedLog.log.copy(entries = followerWithTruncatedLog.log.entries + suffixEntries)
+
+        followerWithTruncatedLog.copy(log = logWithAppendedSuffix)
+    } else {
+        followerWithTruncatedLog
+    }
+
+    val followerWithCommitedEntries = if (message.commitLength > follower.commitLength) {
+        val range = follower.commitLength..message.commitLength - 1
+        val commitedEntries = followerWithAppendedSuffix.log.entries.slice(range)
+
+        //TODO: Deliver commitedEntries to the APP.. put this in a collection and then call Callback?
+
+        followerWithAppendedSuffix.copy(commitLength = message.commitLength)
+    } else {
+        followerWithAppendedSuffix
+    }
+
+    return followerWithCommitedEntries
 }

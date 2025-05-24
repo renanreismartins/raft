@@ -1,6 +1,7 @@
 package statemachine.usecases
 
 import org.example.AppendEntries
+import org.example.AppendEntriesResponse
 import org.example.Config
 import org.example.Destination
 import org.example.Network
@@ -78,5 +79,14 @@ class StateMachineElectionTest {
 
         // Sent an AppendEntries
         assertIs<AppendEntries>(leader.messages.sent.last().message)
+
+        // AppendEntries Response
+        val tm2 = TimeMachine2(network, leader, followerAfterVote).tick()
+        val (_, leaderWithResponse, followerWithAppendRequest) = tm2
+
+        assertIs<AppendEntries>(followerWithAppendRequest.messages.received.last().message)
+        //assertIs<AppendEntriesResponse>(leaderWithResponse.messages.received.last().message)
+
+
     }
 }
