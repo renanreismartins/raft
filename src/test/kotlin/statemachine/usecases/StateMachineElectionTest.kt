@@ -51,6 +51,7 @@ class StateMachineElectionTest {
         //Receives a vote from himself
         assertEquals(setOf(willPromoteAddress), becameCandidate.votesReceived)
 
+        // Follower receives a request for vote
         assertEquals(Role.FOLLOWER, remainedFollower.role)
         assertEquals(
             "REQUEST FOR VOTES",

@@ -102,7 +102,10 @@ class VoteHandlerTest {
         // Then it should continue as Candidate
         assertEquals(Role.CANDIDATE, remainCandidate.role)
 
-
+        // TODO should be checked to not have changed in case the of the Candidate
+        // not been promoted. Those attributes are not part of a Candidate.
+        assertNull(remainCandidate.sentLength)
+        assertNull(remainCandidate.ackedLength)
 
         // Then Election timeout should not be reset as it is still in an ongoing election
         assertEquals(termStartedAt, remainCandidate.termStartedAt)
