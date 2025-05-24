@@ -147,3 +147,22 @@ To efficiently check if two Nodes have identical Logs up to a certain index, it 
 
 <h3>Log Response</h3>
 The ACK sent in the Response, in Kleppmann's implementation, is calculated in the Follower receiving the Log Entries. However, the Leader knows the prefixLen and the suffix length, so a positive or negative Response would be sufficient and the Leader could calculate that value on its side. Klepmman's implementation will be followed here as the consequences of that change are unknown at the moment.
+
+
+<h2>Raft (7/9) - Updating Follower's Log</h2>
+<h3>Truncating the Log</h3>
+The first check to be done when Appending Entries to the Followers Log is to check if the Follower already have some of the Entries sent in the Message. The check is done verifying if the size of the Log is greater than the prefixLen and also if the Message contains Entries to be appended (the Number of Entries to append is greater than 0).
+
+If the Follower has some of the Entries in the Message then the Log should be truncated, removing the Entries that are out of sync and keeping the synched ones.
+
+To remove the out of sync entries we need to find the index of Last comparable Log Entry between the Follower and the Leader. For that we compare which is smaller, the Log in the Follower or the prefixLen + the suffixLen. The last expression is a reflection of the part of the Log in the Leader that it believe the Follower must have. Then we subtract one from this index.
+
+If the Terms on the two corresponding Entries are different in the Follower and the Leader on the calculated index (followerLog[index].ter != suffix[index - prefixLen]) it means the Logs are not in sync and the then the Log must be truncated until prefixLen - 1, this position is where all the new entries should be appended.
+
+<h3>Appending the new Entries</h3>
+With the out of sync entries removed, it is time to append the new Entries.
+For that the prefixLen and the suffix Len must be greater than the Follower's Log size. Could be that the entries to be appended are already contained in the Followers Log and they should not appended again. To accomplish that the first suffix log index to be appended should be the Followers Log size - prefixLen, until the end of the suffix (suffix - 1). To visualise this case, see images/07_appending_the_new_entries.jpg.
+
+<h3>Commiting Entries in the Follower</h3>
+The appended new entries are not yet commited in the Follower. The entries to be commited is a decision only the Leader can take. And it signals it to the Followers sending the 'leaderCommit' containted in the AppendEntries Message, if leaderCommit is greater than the commitLength in the Follower, then the Entries in the Follower Log from the index pointed by commitLength until leaderCommit - 1 should be delivered to the application and the commitLength should be updated to the leaderCommit value.
+
