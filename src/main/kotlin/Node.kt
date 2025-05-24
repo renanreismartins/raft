@@ -8,6 +8,7 @@ import kotlin.math.min
 data class Config(
     val electionTimeout: Int = 5,
     val heartbeatTimeout: Int = 2,
+    val clusterSize: Int = 3
 )
 
 sealed class Node(

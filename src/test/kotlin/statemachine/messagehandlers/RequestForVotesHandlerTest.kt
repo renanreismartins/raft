@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertNull
 
 class RequestForVotesHandlerTest {
 
@@ -66,7 +67,7 @@ class RequestForVotesHandlerTest {
         assertEquals(4, votingNodeWithVote.term)
         assertEquals(candidateAddress, votingNodeWithVote.votedFor)
         assertEquals(setOf(), votingNodeWithVote.votesReceived)
-        assertEquals(0, votingNodeWithVote.termStartedAt)
+        assertNull(votingNodeWithVote.termStartedAt)
         assertIs<VoteFromFollower>(votingNodeWithVote.messages.toSend.first())
     }
 

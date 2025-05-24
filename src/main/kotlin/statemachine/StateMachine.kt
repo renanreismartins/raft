@@ -27,8 +27,6 @@ enum class Role {
     LEADER
 }
 
-val CLUSTER_SIZE = 3
-
 data class StateMachine(
     val address: Source,
     val name: String,

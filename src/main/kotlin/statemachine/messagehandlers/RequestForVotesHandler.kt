@@ -12,8 +12,8 @@ fun requestForVotesHandler(node: StateMachine, message: RequestForVotes): StateM
             term = message.term,
             role = Role.FOLLOWER,
             votedFor = null,
-            votesReceived = emptySet(), // Not in Kleppmann explanation
-            termStartedAt = 0  // Not in Kleppmann explanation
+            votesReceived = emptySet(), //TODO should not be present in the follower. Not in Kleppmann explanation
+            termStartedAt = null, //TODO should not be present in the follower. Not in Kleppmann explanation
         )
     } else {
         node

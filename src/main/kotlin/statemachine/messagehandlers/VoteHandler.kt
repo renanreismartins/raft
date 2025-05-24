@@ -1,7 +1,6 @@
 package org.example.statemachine.messagehandlers
 
 import org.example.VoteFromFollower
-import org.example.statemachine.CLUSTER_SIZE
 import org.example.statemachine.Role
 import org.example.statemachine.StateMachine
 
@@ -20,12 +19,12 @@ fun voteHandler(node: StateMachine, vote: VoteFromFollower): StateMachine {
     if (node.role == Role.CANDIDATE && vote.term == node.term && vote.agrees) {
         val nodeWithVote = node
             .copy(votesReceived = node.votesReceived.plus(vote.src))
-            .copy(termStartedAt = null)
         // TODO if needed: current leader = node.address
 
-        if (nodeWithVote.votesReceived.size >= (CLUSTER_SIZE + 1) / 2) {
+        if (nodeWithVote.votesReceived.size >= (nodeWithVote.config.clusterSize + 1) / 2) {
             val leader = nodeWithVote
                 .copy(role = Role.LEADER)
+                .copy(termStartedAt = null) // Cancel election timeout
                 .copy(sentLength = nodeWithVote.peers.associateWith { nodeWithVote.log.size() })
                 .copy(ackedLength = nodeWithVote.peers.associateWith { 0 })
 
