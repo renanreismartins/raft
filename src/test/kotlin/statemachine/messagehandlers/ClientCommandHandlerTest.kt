@@ -29,16 +29,18 @@ class ClientCommandHandlerTest {
             name = "NodeA",
             network = network,
             peers = listOf(followerAddress),
-            ackedLength = mapOf(followerAddress to 2),
             term = 1,
             role = Role.LEADER,
-            termStartedAt = 4
+            termStartedAt = 4,
+            log = Log2(listOf(Entry("ADD 1", 1))),
+            sentLength = mapOf(followerAddress to 1),
+            ackedLength = mapOf(followerAddress to 1),
         )
 
         val command = ClientCommand(
             Source("127.0.0.1", 9000),
             Destination.from(leaderAddress),
-            -1,
+            -1, //TODO external message should not have term from
             ""
         )
 
@@ -47,15 +49,15 @@ class ClientCommandHandlerTest {
 
         // Then it adds the command to its Log
         assertEquals(
-            Log2(listOf(Entry(command.content, 1))),
+            Log2(listOf(Entry("ADD 1", 1), Entry(command.content, 1))),
             leaderWithCommand.log
         )
 
         // Then it ack itself
         assertEquals(
             mapOf(
-                followerAddress to 2,
-                Destination.from(leaderAddress) to 1
+                followerAddress to 1,
+                Destination.from(leaderAddress) to 2
             ),
             leaderWithCommand.ackedLength
         )

@@ -10,7 +10,6 @@ import org.example.statemachine.Role
 import org.example.statemachine.StateMachine
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class LogReplicationTest {
 
@@ -40,12 +39,15 @@ class LogReplicationTest {
             peers = listOf(followerAddress),
             log = Log2(listOf(Entry("ADD 2", 1), Entry("ADD 2", 2))),
             term = 2,
+            //TODO the following 4 should be in a method "promoteToLeader"
+            // duplication from VoteHandler
             role = Role.LEADER,
-            termStartedAt = 10
+            termStartedAt = null,
+            sentLength = mapOf(followerAddress to 2), // peerAddresses to Log size
+            ackedLength = mapOf(followerAddress to 0) // peerAddresses to 0 on election
         )
 
         // When leader replicates its log to a Follower
-        // it has not sent any logs yet
         val appendEntries = leader.replicateLog(followerAddress)
 
         // Then it has an AppendEntry with no Entries
@@ -82,7 +84,8 @@ class LogReplicationTest {
             term = 2,
             role = Role.LEADER,
             sentLength = mapOf(followerAddress to 0),
-            termStartedAt = 10
+            ackedLength = mapOf(followerAddress to 0), // peerAddresses to 0 on election
+            termStartedAt = null
         )
 
         // When leader replicates its log to a Follower
@@ -115,8 +118,8 @@ class LogReplicationTest {
     }
 
     @Test
-    fun `Log should be replicated to all Followers and the Heartbeat timeout reset`() {
-// Given
+    fun `AppendEntries should be sent to all Followers and the Heartbeat timeout reset`() {
+        // Given
         val network = Network()
         network.clock = 12
 
@@ -132,11 +135,12 @@ class LogReplicationTest {
             log = Log2(listOf(Entry("ADD 2", 1), Entry("ADD 2", 2))),
             term = 2,
             role = Role.LEADER,
-            termStartedAt = 10
+            termStartedAt = null,
+            sentLength = mapOf(followerAddress1 to 2), // peerAddresses to Log size
+            ackedLength = mapOf(followerAddress1 to 0) // peerAddresses to 0 on election
         )
 
         // When leader replicates its log to a Follower
-        // it has not sent any logs yet
         val leaderWithEntries = leader.replicateLog()
 
         // Then Leader should have 2 AppendEntries, one for each Follower

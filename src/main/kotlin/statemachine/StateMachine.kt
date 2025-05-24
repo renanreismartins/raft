@@ -49,15 +49,16 @@ data class StateMachine(
     // </Candidate>
 
     // <Leader>
+    //TODO cancel values in case of demotion
     // These could be encapsulated collections that would accept
-    // Address in a method to return its value.
+    // an Address in a method to return its value.
     // This sentLength is called nextIndex in the paper
-    val sentLength: Map<Destination, Int> = peers.associateWith { log.size() },
+    val sentLength: Map<Destination, Int>? = null,
 
     val sentHeartbeatAt: Int? = null,
 
     // This ackedLength is called matchIndex in the paper
-    val ackedLength: Map<Destination, Int> = peers.associateWith { 0 },
+    val ackedLength: Map<Destination, Int>? = null,
     // </Leader>
 ) {
 
@@ -79,7 +80,7 @@ data class StateMachine(
                     is Heartbeat -> this //TODO
                     is VoteFromFollower -> voteHandler(machine, message)
                     is AppendEntries -> appendEntriesHandler(machine, message)
-                    is AppendEntriesResponse -> TODO()
+                    is AppendEntriesResponse -> this //TODO
                 }.add(message.toReceived())
             }
 
@@ -105,6 +106,10 @@ data class StateMachine(
         // During normal operation of the system, Follower hasn't received messages in heartbeatTimeout period and should promote itself
         val hasReachedTimeoutWithLastMessage =
             received().isNotEmpty() && network.clock - received().last().receivedAt >= config.heartbeatTimeout
+
+        RaftLogger.logInfo(this, "Reached first timeout after startup", hasReachedFirstTimeoutAfterStartup)
+        RaftLogger.logInfo(this, "Reached timeout since the last message", hasReachedTimeoutWithLastMessage)
+
         return hasReachedFirstTimeoutAfterStartup || hasReachedTimeoutWithLastMessage
     }
     // <//Follower>
@@ -120,6 +125,7 @@ data class StateMachine(
 
     // <Candidate and Follower>
     fun startElection(): StateMachine {
+        RaftLogger.logInfo(this, "Election started.")
         return this.copy(
             role = Role.CANDIDATE,
             term = term + 1,
@@ -172,7 +178,7 @@ data class StateMachine(
 
     fun replicateLog(follower: Destination): AppendEntries {
         //TODO sentLength was already set in the election, verify if defensive check (default value) is needed here
-        val prefixLen = sentLength.getOrDefault(follower, 0)
+        val prefixLen = sentLength!!.getOrDefault(follower, 0)
 
         val suffix = log.entries.slice(prefixLen until log.size())
 
