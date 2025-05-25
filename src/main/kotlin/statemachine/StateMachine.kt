@@ -84,9 +84,9 @@ data class StateMachine(
                 }.add(message.toReceived())
             }
 
-        if (role == Role.FOLLOWER && communicationTimedOut()) return nodeAfterProcessing.startElection()
-        if (role == Role.CANDIDATE && hasReachedElectionTimeout()) return nodeAfterProcessing.startElection()
-        if (role == Role.LEADER && hasHeartbeatTimedOut()) return this.replicateLog()
+        if (nodeAfterProcessing.role == Role.FOLLOWER && nodeAfterProcessing.communicationTimedOut()) return nodeAfterProcessing.startElection()
+        if (nodeAfterProcessing.role == Role.CANDIDATE && nodeAfterProcessing.hasReachedElectionTimeout()) return nodeAfterProcessing.startElection()
+        if (nodeAfterProcessing.role == Role.LEADER && nodeAfterProcessing.hasHeartbeatTimedOut()) return nodeAfterProcessing.replicateLog()
 
         return nodeAfterProcessing
     }
