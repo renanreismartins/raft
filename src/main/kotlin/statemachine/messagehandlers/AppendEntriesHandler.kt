@@ -32,11 +32,8 @@ fun appendEntriesHandler(node: StateMachine, message: AppendEntries): StateMachi
             && (message.prefixLen == 0 || (follower.log.entries[message.prefixLen - 1].term == message.prefixTerm))
 
     return if (follower.term == message.term && logOk)
-
-        //TODO APPEND ENTRIES TO THE LOG
-
-        follower.toSend(
-            AppendEntriesResponse(
+        appendEntries(follower, message)
+            .toSend(AppendEntriesResponse(
                 follower.address,
                 Destination.from(message.src),
                 "",

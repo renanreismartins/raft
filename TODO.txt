@@ -1,0 +1,7 @@
+Revisit the Election Timeout concept
+This should be used to re-start an election, incrementing its term in case a Candidate did not get promoted
+or demoted within the timeout period. The election timeout has been signaled by the termStartedAt class parameter
+
+-------------
+
+Addopt test strategy: unit for heavly logic and use cases only on the message exchange and main attributes
