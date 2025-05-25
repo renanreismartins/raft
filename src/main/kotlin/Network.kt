@@ -1,5 +1,7 @@
 package org.example
 
+import org.example.statemachine.RaftLogger
+
 typealias NetworkDelay = Int
 typealias DeliveryTime = Int
 
@@ -48,6 +50,7 @@ class Network(
 
     fun tick(ticks: Int = 1): Network {
         clock += ticks
+        RaftLogger.logTick(clock)
         return this
     }
 }
