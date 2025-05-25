@@ -10,6 +10,7 @@ import org.example.VoteFromFollower
 import org.example.statemachine.Role
 import org.example.statemachine.StateMachine
 import org.example.statemachine.TimeMachine2
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -78,16 +79,21 @@ class StateMachineElectionTest {
             )
         )
 
-        // Sent an AppendEntries
+        // Leader sends an AppendEntries on its promotion
         assertIs<AppendEntries>(leader.messages.sent.last().message)
 
-        // AppendEntries Response
-        val tm2 = TimeMachine2(network, leader, followerAfterVote).tick()
-        val (_, leaderWithResponse, followerWithAppendRequest) = tm2
 
+        // Follower accepts the new Leader and send an AppendEntries Response
+        val (_, leaderWaitingResponse, followerWithAppendRequest) = TimeMachine2(network, leader, followerAfterVote).tick()
+        assertEquals(leaderWaitingResponse.address, followerWithAppendRequest.currentLeader)
         assertIs<AppendEntries>(followerWithAppendRequest.messages.received.last().message)
-        //assertIs<AppendEntriesResponse>(leaderWithResponse.messages.received.last().message)
 
+        // Leader receives the AppendEntries Response
+        val (_, leaderWithResponse, _) = TimeMachine2(network, leaderWaitingResponse, followerWithAppendRequest).tick()
+        val appendEntriesResponse = leaderWithResponse.messages.received.last().message
+        assertIs<AppendEntriesResponse>(appendEntriesResponse)
+        assertTrue(appendEntriesResponse.success)
+        assertEquals(0, appendEntriesResponse.ack)
 
     }
 }
