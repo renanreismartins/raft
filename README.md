@@ -166,3 +166,19 @@ For that the prefixLen and the suffix Len must be greater than the Follower's Lo
 <h3>Commiting Entries in the Follower</h3>
 The appended new entries are not yet commited in the Follower. The entries to be commited is a decision only the Leader can take. And it signals it to the Followers sending the 'leaderCommit' containted in the AppendEntries Message, if leaderCommit is greater than the commitLength in the Follower, then the Entries in the Follower Log from the index pointed by commitLength until leaderCommit - 1 should be delivered to the application and the commitLength should be updated to the leaderCommit value.
 
+
+<h2>Raft (8/9) - Log acknowledgments in the Leader</h2>
+When receiving a Log Acknowledgment the Leader must perform the usual Term checks.
+If the Term from the Message is greater than its Term, then it should be demoted to Follower and set its Current term as the Message Term. Kleppmann's implementation also resets the Vote Record and cancel the Election timeout.
+
+For the Term check, Kleppmann does not check the Role, this implies that the Leader can send an AppendEntries and before the Acknowledgement arrives, it can have changed to another Role. In this case, it still have to update its Term but discard the Acknowledgement.
+
+In the case where the Leader has the same Term as the Message, it has to check if the Acknowledgement was successfull and that the Number of Entries acknowledged (ack) is at least the same as the number of entries previously acknowledged by the Follower, then the Leader can record the Followers acknowledgement setting the sentLength and ackLength to the ack number from the message and Commit its Log Entries.
+
+The reason for the Ack check, is that if a message arrives with an Ack smaller than the previously acknowledged by the Follower, it means the message is out of order (outdated, delayed) and other ack messages already acked the Log.
+
+If the Acknowledgement was not sucessful, could be there was a GAP in the Logs, for example, the Leader assumed the Follower has entries that it does not have (Follower lost part of the Logs and does not have logs synched with the entire prefixLen set on the Leader).
+
+For that we need to check if the Leader had previously attempted to send entries to the Follower (sentLength[follower] > 0) and try to replicate the log again, without sending the last Log Entry (sentLength[follower] = sentLength[follower] - 1). On the replication log this means shrinking the prefix by one and sending one more entry in the suffix.
+
+Note that this might trigger many messages between the Leader and the Follower until the logs gets synchronised. In terms of networking, one network call will trigger another (nested) call, that can trigger another call and so on, until the log gets synched.
