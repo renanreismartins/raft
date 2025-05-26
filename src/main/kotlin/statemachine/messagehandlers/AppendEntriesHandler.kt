@@ -36,6 +36,7 @@ fun appendEntriesHandler(node: StateMachine, message: AppendEntries): StateMachi
             .toSend(AppendEntriesResponse(
                 follower.address,
                 Destination.from(message.src),
+                follower.term, //TODO this works because term was not changed in appendEntries
                 "",
                 message.prefixLen + message.entries.size,
                 true
@@ -46,6 +47,7 @@ fun appendEntriesHandler(node: StateMachine, message: AppendEntries): StateMachi
             AppendEntriesResponse(
                 follower.address,
                 Destination.from(message.src),
+                follower.term,
                 "",
                 0,
                 false

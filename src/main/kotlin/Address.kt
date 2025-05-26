@@ -6,7 +6,13 @@ sealed class Address(open val host: String, open val port: Int) {
     }
 }
 
-data class Source(override val host: String, override val port: Int) : Address(host, port)
+data class Source(override val host: String, override val port: Int) : Address(host, port) {
+    companion object {
+        fun from(src: Address): Source {
+            return Source(src.host, src.port)
+        }
+    }
+}
 
 data class Destination(override val host: String, override val port: Int) : Address(host, port) {
     companion object {
