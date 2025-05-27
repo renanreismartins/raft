@@ -19,14 +19,12 @@ fun appendEntryResponseHandler(node: StateMachine, message: AppendEntriesRespons
     if (message.term == node.term) {
         // Ack was successful
         if (message.success && message.ack >= node.ackedLength!!.getValue(followerAddress)) {
-            val commitedEntriesNode = node.copy(
-                sentLength = node.sentLength!! + (followerAddress to message.ack),
-                ackedLength = node.ackedLength + (followerAddress to message.ack)
+            return commitLogEntries(
+                node.copy(
+                    sentLength = node.sentLength!! + (followerAddress to message.ack),
+                    ackedLength = node.ackedLength + (followerAddress to message.ack)
+                )
             )
-
-            //TODO COMMIT ENTRIES
-
-            return commitedEntriesNode
 
         } else if (node.sentLength!!.getValue(followerAddress) > 0) {
             /**
@@ -52,4 +50,27 @@ fun appendEntryResponseHandler(node: StateMachine, message: AppendEntriesRespons
     }
 
     return node
+}
+
+fun commitLogEntries(leader: StateMachine): StateMachine {
+    val logIndicesToBeCommited = (leader.commitLength until leader.log.size())
+        .filter { commitLength ->
+            commitLengthHasQuorum(
+                commitLength,
+                leader.ackedLength!!,
+                leader.config.clusterSize
+            )
+        }
+
+    return if (logIndicesToBeCommited.isEmpty())
+        leader
+    else
+        //TODO deliver logs to the application
+        leader.copy(commitLength = logIndicesToBeCommited.last() + 1)
+}
+
+fun commitLengthHasQuorum(commitLength: Int, acked: Map<Destination, Int>, clusterSize: Int): Boolean {
+    return acked
+        .filter { it.value > commitLength }
+        .count() >= ((clusterSize + 1) / 2)
 }

@@ -10,6 +10,7 @@ import org.example.Source
 import org.example.statemachine.Role
 import org.example.statemachine.StateMachine
 import org.example.statemachine.messagehandlers.appendEntryResponseHandler
+import org.example.statemachine.messagehandlers.commitLogEntries
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -97,7 +98,6 @@ class AppendEntryResponseHandlerTest {
             leaderWithAck.ackedLength
         )
 
-        //TODO check commited entries
     }
 
 
@@ -160,7 +160,49 @@ class AppendEntryResponseHandlerTest {
             leaderWithAck.ackedLength
         )
 
-        //TODO check commited entries
     }
 
+    @Test
+    fun `Leader should Commit Entries (set commitLength) if entries are acked by a quorum of Followers`() {
+        val followerAddress1 = Destination("127.0.0.1", 9001)
+        val followerAddress2 = Destination("127.0.0.1", 9002)
+        val followerAddress3 = Destination("127.0.0.1", 9003)
+        val leaderAddress = Source("127.0.0.1", 9000)
+        val leader = StateMachine(
+            address = leaderAddress,
+            name = "leader",
+            network = Network(),
+            peers = listOf(),
+            term = 1,
+            role = Role.LEADER,
+            termStartedAt = 4,
+            votedFor = leaderAddress,
+            log = Log2(
+                listOf(
+                    Entry("ADD 1", 1),
+                    Entry("ADD 2", 1),
+                    Entry("ADD 3", 1),
+                    Entry("ADD 4", 1)
+                )
+            ),
+            commitLength = 2,
+            ackedLength = mapOf(
+                followerAddress1 to 2,
+                followerAddress2 to 4,
+                followerAddress3 to 4
+            )
+        )
+
+        /**
+         * Then a Leader has commited 2 entries, its Log Size is 4,
+         * the last Commit Entry to be checked is 3,
+         * if the quorum of followers (2 in 3 nodes) have acked more than
+         * 3 positions, than the Leader can commit to that position + 1
+         * (end of the log), commitLength = 4
+         */
+        val leaderWithCommitedEntries = commitLogEntries(leader)
+
+        // Then
+        assertEquals(4, leaderWithCommitedEntries.commitLength)
+    }
 }
