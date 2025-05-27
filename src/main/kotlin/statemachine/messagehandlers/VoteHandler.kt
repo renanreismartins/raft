@@ -30,12 +30,12 @@ fun voteHandler(node: StateMachine, vote: VoteFromFollower): StateMachine {
 
                 /**
                  * The ackedLength is where the Leader records the number of Log Entries the Followers
-                 * have confirmed they have received.
+                 * have confirmed they have received. The Leader also self-acknowledge its entries
+                 * when it receives a command from the client.
+                 * This Index can be as big as the size of the Log.
                  *
-                 * The Leader must include itself in this Map, so it can count itself in the Quorum
-                 * when commiting Log Entries.
                  */
-                .copy(ackedLength = nodeWithVote.peers.associateWith { 0 } + (Destination.from(nodeWithVote.address) to 0))
+                .copy(ackedLength = nodeWithVote.peers.associateWith { 0 })
 
             return leader.replicateLog()
         }
