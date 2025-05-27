@@ -20,7 +20,6 @@ fun voteHandler(node: StateMachine, vote: VoteFromFollower): StateMachine {
     if (node.role == Role.CANDIDATE && vote.term == node.term && vote.agrees) {
         val nodeWithVote = node
             .copy(votesReceived = node.votesReceived.plus(vote.src))
-        // TODO if needed: current leader = node.address
 
         if (nodeWithVote.votesReceived.size >= (nodeWithVote.config.clusterSize + 1) / 2) {
             val leader = nodeWithVote
