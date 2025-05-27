@@ -182,3 +182,9 @@ If the Acknowledgement was not sucessful, could be there was a GAP in the Logs, 
 For that we need to check if the Leader had previously attempted to send entries to the Follower (sentLength[follower] > 0) and try to replicate the log again, without sending the last Log Entry (sentLength[follower] = sentLength[follower] - 1). On the replication log this means shrinking the prefix by one and sending one more entry in the suffix.
 
 Note that this might trigger many messages between the Leader and the Follower until the logs gets synchronised. In terms of networking, one network call will trigger another (nested) call, that can trigger another call and so on, until the log gets synched.
+
+
+<h2>Raft (9/9) - Leader Commmits Log Entries</h2>
+The ackedLength is where the Leader records the number of Log Entries the Followers have confirmed they have received.
+If the 'commitLength' in the Leader is smaller than its Log size, the Log entry in the 'commitLength' index can be applied to the application and commited (commitLength + 1) if the Log has been acked by the quorum of the cluster, and the process repeated while 'commitLogLength' < log.size or until an entry without quorum is found.
+As there is no point in continuing check as subsequent entries will also not have been acked by the Followers and can't be commited.
