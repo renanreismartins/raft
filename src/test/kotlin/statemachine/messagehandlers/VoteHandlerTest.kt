@@ -162,8 +162,7 @@ class VoteHandlerTest {
 
         val expectedAckedLength = mapOf(
             followerAddress1 to 0,
-            followerAddress2 to 0,
-            Destination.from(leader.address) to 0
+            followerAddress2 to 0
         )
         assertEquals(expectedAckedLength, leader.ackedLength)
 
