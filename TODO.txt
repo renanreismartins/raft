@@ -3,5 +3,8 @@ This should be used to re-start an election, incrementing its term in case a Can
 or demoted within the timeout period. The election timeout has been signaled by the termStartedAt class parameter
 
 -------------
+Set currentLeader where necessary
+
+-------------
 
 Addopt test strategy: unit for heavly logic and use cases only on the message exchange and main attributes

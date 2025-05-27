@@ -14,7 +14,9 @@ fun clientCommandHandler(node: StateMachine, command: ClientCommand): StateMachi
         val newNode = node
             .copy(log = node.log.add(Entry(command.content, node.term)))
 
+        //TODO is this doubling the ackedLength? node.ackedLength !!+ (node.ackedLength +....
         val result = newNode.copy(ackedLength = node.ackedLength !!+ (node.ackedLength + (Destination.from(node.address) to newNode.log.size())))
+        // val result = newNode.copy(ackedLength = node.ackedLength !!+ (Destination.from(node.address) to newNode.log.size()))
 
         return result.replicateLog()
     } else {
