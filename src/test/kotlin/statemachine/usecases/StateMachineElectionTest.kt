@@ -30,7 +30,7 @@ class StateMachineElectionTest {
                 "NodeA",
                 network = network,
                 peers = listOf(Destination.from(remainsFollowerAddress)),
-                config = Config(3),
+                config = Config(20),
             )
 
         val remainsFollower =
@@ -39,11 +39,11 @@ class StateMachineElectionTest {
                 "NodeB",
                 network = network,
                 peers = Destination.from(listOf(willPromoteAddress)),
-                config = Config(10),
+                config = Config(30),
             )
 
         // When election times out
-        val timeMachine = TimeMachine2(network, willPromote, remainsFollower).tick(4)
+        val timeMachine = TimeMachine2(network, willPromote, remainsFollower).tick(21)
         val (_, becameCandidate, remainedFollower) = timeMachine
 
         // Then Candidate got promoted and sent its Request for Votes to the Follower
