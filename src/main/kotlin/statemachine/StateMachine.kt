@@ -18,6 +18,7 @@ import org.example.RequestForVotes
 import org.example.Source
 import org.example.VoteFromFollower
 import org.example.statemachine.messagehandlers.appendEntriesHandler
+import org.example.statemachine.messagehandlers.appendEntryResponseHandler
 import org.example.statemachine.messagehandlers.requestForVotesHandler
 import org.example.statemachine.messagehandlers.voteHandler
 
@@ -80,7 +81,7 @@ data class StateMachine(
                     is Heartbeat -> this //TODO
                     is VoteFromFollower -> voteHandler(machine, message)
                     is AppendEntries -> appendEntriesHandler(machine, message)
-                    is AppendEntriesResponse -> this //TODO
+                    is AppendEntriesResponse -> appendEntryResponseHandler(machine, message)
                 }.add(message.toReceived())
             }
 
