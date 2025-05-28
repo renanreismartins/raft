@@ -115,20 +115,35 @@ data class StateMachine(
     // <//Follower>
 
     // <Candidate>
-    fun hasReachedElectionTimeout(): Boolean = network.clock - termStartedAt!! >= config.electionTimeout
+    fun hasReachedElectionTimeout(): Boolean {
+        val hasTimedOut = network.clock - termStartedAt!! >= config.electionTimeout
 
-    fun voteForItself(): StateMachine = this.copy(
-        votedFor = this.address,
-        votesReceived = this.votesReceived.plus(this.address)
-    )
+        RaftLogger.logInfo(this, "Reached election timeout", hasTimedOut)
+
+        return hasTimedOut
+    }
+
+    fun voteForItself(): StateMachine {
+        val nodeWithVote = this.copy(
+            votedFor = this.address,
+            votesReceived = this.votesReceived.plus(this.address)
+        )
+
+        RaftLogger.logInfo(this, "Voted for itself. Votes Received ${nodeWithVote.votesReceived}")
+
+        return nodeWithVote
+    }
     // </Candidate>
 
     // <Candidate and Follower>
     fun startElection(): StateMachine {
-        RaftLogger.logInfo(this, "Election started.")
+        val newTerm = term + 1
+
+        RaftLogger.logInfo(this, "Election started. New Term: $newTerm")
+
         return this.copy(
             role = Role.CANDIDATE,
-            term = term + 1,
+            term = newTerm,
             termStartedAt = network.clock
         )
         .voteForItself()
@@ -141,22 +156,39 @@ data class StateMachine(
         val lastTerm = if (log.size() > 0) log.entries.last().term else 0
         val requestForVotes =
             peers.map { peer -> RequestForVotes(this.address, peer, term, "REQUEST FOR VOTES", lastTerm, log.size()) }
+
+        RaftLogger.logInfo(this, "Requested Votes: $requestForVotes")
+
         return this.copy(messages = messages.toSend(requestForVotes))
     }
     // </Candidate and Follower>
 
     // <Leader>
     fun hasHeartbeatTimedOut(): Boolean {
-        return network.clock - sentHeartbeatAt!! >= config.heartbeatTimeout
+        val hasTimeout = network.clock - sentHeartbeatAt!! >= config.heartbeatTimeout
+
+        RaftLogger.logInfo(this, "Reached heartbeat timeout", hasTimeout)
+
+        return hasTimeout
     }
     // </Leader>
 
-    fun toSend(message: Message): StateMachine = this.copy(messages = messages.toSend(message))
+    fun toSend(message: Message): StateMachine {
+        RaftLogger.logInfo(this, "New Message to send: $message")
+
+        return this.copy(messages = messages.toSend(message))
+    }
 
     fun received() = messages.received
 
-    fun add(vararg message: ReceivedMessage): StateMachine =
-        this.copy(messages = messages.copy(received = received() + message))
+    //TODO rename message -> messages
+    fun add(vararg message: ReceivedMessage): StateMachine {
+        message.forEach {
+            RaftLogger.logInfo(this, "New Message received: $it")
+        }
+
+        return this.copy(messages = messages.copy(received = received() + message))
+    }
 
     fun Message.toReceived(): ReceivedMessage =
         ReceivedMessage(this, network.clock)
@@ -169,11 +201,17 @@ data class StateMachine(
         this.copy(messages = messages.flush(network.clock))
 
     fun replicateLog(): StateMachine {
+        RaftLogger.logInfo(this, "[Log replication initiated]")
+
         val entries: List<AppendEntries> = peers.map { replicateLog(it) }
         // TODO add toSend(List<Message>) instead fo the fold
-        return entries
+        val nodeWithEntriesToSend =  entries
             .fold(this) { acc, t -> acc.toSend(t) }
             .copy(sentHeartbeatAt = network.clock) // TODO resetHeartbeatClock()
+
+        RaftLogger.logInfo(this, "[Log replication ended]")
+
+        return nodeWithEntriesToSend
     }
 
     fun replicateLog(follower: Destination): AppendEntries {

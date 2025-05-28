@@ -5,3 +5,7 @@ or demoted within the timeout period. The election timeout has been signaled by 
 -------------
 
 Addopt test strategy: unit for heavly logic and use cases only on the message exchange and main attributes
+
+-------------
+
+When receiving a message, add it to the node before the processing. It makes more sense and also helps on the log sequence
