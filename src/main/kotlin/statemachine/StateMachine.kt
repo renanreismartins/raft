@@ -107,8 +107,8 @@ data class StateMachine(
         val hasReachedTimeoutWithLastMessage =
             received().isNotEmpty() && network.clock - received().last().receivedAt >= config.electionTimeout
 
-        RaftLogger.logInfo(this, "Reached first timeout after startup", hasReachedFirstTimeoutAfterStartup)
-        RaftLogger.logInfo(this, "Reached timeout since the last message", hasReachedTimeoutWithLastMessage)
+        RaftLogger.logInfo(this, "⏱️ Reached first timeout after startup", hasReachedFirstTimeoutAfterStartup)
+        RaftLogger.logInfo(this, "⏱️ Reached timeout since the last message", hasReachedTimeoutWithLastMessage)
 
         return hasReachedFirstTimeoutAfterStartup || hasReachedTimeoutWithLastMessage
     }
@@ -118,11 +118,10 @@ data class StateMachine(
     fun hasReachedElectionTimeout(): Boolean {
         val hasTimedOut = network.clock - termStartedAt!! >= config.electionTimeout
 
-        RaftLogger.logInfo(this, "Reached election timeout", hasTimedOut)
+        RaftLogger.logInfo(this, "⏱️ Reached election timeout", hasTimedOut)
 
         return hasTimedOut
     }
-
     fun voteForItself(): StateMachine {
         val nodeWithVote = this.copy(
             votedFor = this.address,
@@ -138,8 +137,7 @@ data class StateMachine(
     // <Candidate and Follower>
     fun startElection(): StateMachine {
         val newTerm = term + 1
-
-        RaftLogger.logInfo(this, "Election started. New Term: $newTerm")
+        RaftLogger.logInfo(this, "🗳️ Election started. New Term: $newTerm")
 
         return this.copy(
             role = Role.CANDIDATE,
@@ -167,7 +165,7 @@ data class StateMachine(
     fun hasHeartbeatTimedOut(): Boolean {
         val hasTimeout = network.clock - sentHeartbeatAt!! >= config.heartbeatTimeout
 
-        RaftLogger.logInfo(this, "Reached heartbeat timeout", hasTimeout)
+        RaftLogger.logInfo(this, "⏱️ Reached heartbeat timeout", hasTimeout)
 
         return hasTimeout
     }
