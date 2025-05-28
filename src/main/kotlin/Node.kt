@@ -6,8 +6,8 @@ import kotlin.math.min
 // TODO: Figure out a good type for this when we start cleaning
 // TODO: Add this to all the tests, we should use 'random' values
 data class Config(
-    val electionTimeout: Int = 5,
-    val heartbeatTimeout: Int = 2,
+    val electionTimeout: Int = 30,
+    val heartbeatTimeout: Int = 5,
     val clusterSize: Int = 3
 )
 
