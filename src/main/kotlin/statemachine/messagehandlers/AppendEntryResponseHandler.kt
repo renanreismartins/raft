@@ -5,6 +5,7 @@ import org.example.Destination
 import org.example.statemachine.Role
 import org.example.statemachine.StateMachine
 
+//TODO appendEntryResponseHandler appendEntriesResponseHandler
 fun appendEntryResponseHandler(node: StateMachine, message: AppendEntriesResponse): StateMachine {
     if (message.term > node.term) {
         return node.copy(

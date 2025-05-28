@@ -1,13 +1,16 @@
 package org.example.statemachine.messagehandlers
 
-import org.example.Destination
 import org.example.VoteFromFollower
+import org.example.statemachine.RaftLogger
 import org.example.statemachine.Role
 import org.example.statemachine.StateMachine
 
 fun voteHandler(node: StateMachine, vote: VoteFromFollower): StateMachine {
     //TODO CHECK ALL PLACES THE ROLE IS CHANGED AND RESET VARIABLES (TIMERS, VOTED FOR, ETC)
     if (vote.term > node.term) {
+        RaftLogger.logInfo(node, "⬇️ Will be demoted to Follower and have the new term: ${vote.term}")
+        RaftLogger.logInfo(node, "Will have its vote reset")
+
         return node.copy(
             term = vote.term,
             role = Role.FOLLOWER,
@@ -20,6 +23,8 @@ fun voteHandler(node: StateMachine, vote: VoteFromFollower): StateMachine {
     if (node.role == Role.CANDIDATE && vote.term == node.term && vote.agrees) {
         val nodeWithVote = node
             .copy(votesReceived = node.votesReceived.plus(vote.src))
+
+        RaftLogger.logInfo(node, "Candidate received a positive vote")
 
         if (nodeWithVote.votesReceived.size >= (nodeWithVote.config.clusterSize + 1) / 2) {
             val leader = nodeWithVote
@@ -35,6 +40,9 @@ fun voteHandler(node: StateMachine, vote: VoteFromFollower): StateMachine {
                  *
                  */
                 .copy(ackedLength = nodeWithVote.peers.associateWith { 0 })
+
+            RaftLogger.logInfo(leader, "⬆️ Got promoted to Leader")
+            RaftLogger.debug(leader, "sentLength: ${leader.sentLength}")
 
             return leader.replicateLog()
         }
