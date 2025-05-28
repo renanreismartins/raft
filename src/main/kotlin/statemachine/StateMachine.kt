@@ -105,7 +105,7 @@ data class StateMachine(
         val hasReachedFirstTimeoutAfterStartup = received().isEmpty() && network.clock >= config.electionTimeout
         // During normal operation of the system, Follower hasn't received messages in heartbeatTimeout period and should promote itself
         val hasReachedTimeoutWithLastMessage =
-            received().isNotEmpty() && network.clock - received().last().receivedAt >= config.heartbeatTimeout
+            received().isNotEmpty() && network.clock - received().last().receivedAt >= config.electionTimeout
 
         RaftLogger.logInfo(this, "Reached first timeout after startup", hasReachedFirstTimeoutAfterStartup)
         RaftLogger.logInfo(this, "Reached timeout since the last message", hasReachedTimeoutWithLastMessage)
