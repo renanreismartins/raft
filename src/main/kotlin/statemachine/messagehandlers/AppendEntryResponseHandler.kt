@@ -62,8 +62,7 @@ fun commitLogEntries(leader: StateMachine): StateMachine {
         .filter { commitLength ->
             commitLengthHasQuorum(
                 commitLength,
-                leader.ackedLength!!,
-                leader.config.clusterSize
+                leader
             )
         }
 
@@ -78,8 +77,19 @@ fun commitLogEntries(leader: StateMachine): StateMachine {
 
 }
 
-fun commitLengthHasQuorum(commitLength: Int, acked: Map<Destination, Int>, clusterSize: Int): Boolean {
-    return acked
+fun commitLengthHasQuorum(commitLength: Int, leader: StateMachine): Boolean {
+
+    RaftLogger.logInfo(leader, "commitLength: $commitLength / ackedLength: ${leader.ackedLength}")
+
+    val numberOfNodesAckedTheCommitLength = leader.ackedLength!!
         .filter { it.value > commitLength }
-        .count() >= ((clusterSize + 1) / 2)
+        .count()
+
+    RaftLogger.logInfo(leader, "Nr Nodes acked the commitLength: $numberOfNodesAckedTheCommitLength")
+
+    val hasQuorum = numberOfNodesAckedTheCommitLength >= ((leader.config.clusterSize + 1) / 2)
+
+    RaftLogger.logInfo(leader, "Has Quorum: $hasQuorum")
+
+    return hasQuorum
 }
