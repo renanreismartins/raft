@@ -21,7 +21,9 @@ fun appendEntryResponseHandler(node: StateMachine, message: AppendEntriesRespons
     if (message.term == node.term) {
         // Ack was successful
         if (message.success && message.ack >= node.ackedLength!!.getValue(followerAddress)) {
+
             RaftLogger.logInfo(node, "Entries acked by follower")
+
             return commitLogEntries(
                 node.copy(
                     sentLength = node.sentLength!! + (followerAddress to message.ack),

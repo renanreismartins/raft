@@ -19,6 +19,7 @@ import org.example.Source
 import org.example.VoteFromFollower
 import org.example.statemachine.messagehandlers.appendEntriesHandler
 import org.example.statemachine.messagehandlers.appendEntryResponseHandler
+import org.example.statemachine.messagehandlers.clientCommandHandler
 import org.example.statemachine.messagehandlers.requestForVotesHandler
 import org.example.statemachine.messagehandlers.voteHandler
 
@@ -77,7 +78,7 @@ data class StateMachine(
                     is RequestForVotes -> requestForVotesHandler(machine, message)
                     is AppendEntry -> TODO()
                     is AppendEntryResponse -> TODO()
-                    is ClientCommand -> TODO()
+                    is ClientCommand -> clientCommandHandler(machine, message)
                     is Heartbeat -> this //TODO
                     is VoteFromFollower -> voteHandler(machine, message)
                     is AppendEntries -> appendEntriesHandler(machine, message)
