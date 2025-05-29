@@ -48,8 +48,8 @@ class FollowerTests {
     }
 
     @Test
-    fun `Follower becomes a Candidate if it does not receive a message before the heartbeat timeout (3 ticks)`() {
-        // In this scenario the Follower already received a message, but it too long
+    fun `Follower becomes a Candidate if it does not receive a message before the election timeout (3 ticks)`() {
+        // In this scenario the Follower already received a message, but it took too long
         // (more time than the HeartBeatTimeout) to receive a second message, triggering
         // an election
 
@@ -58,7 +58,7 @@ class FollowerTests {
         // Given
         val followerAddress = Source("127.0.0.1", 9001)
         val follower =
-            StateMachine(followerAddress, "NodeA", network = network, peers = emptyList(), config = Config(heartbeatTimeout = 3))
+            StateMachine(followerAddress, "NodeA", network = network, peers = emptyList(), config = Config(electionTimeout = 3))
                 .add(ReceivedMessage(Heartbeat(Source("127.0.0.1", 9002), Destination.from(followerAddress), 0, ""), 1))
 
         // First HeartBeatTimeOut
@@ -76,13 +76,13 @@ class FollowerTests {
     }
 
     @Test
-    fun `Follower should not become a Candidate it receives a message before the heartbeat timeout (3 ticks)`() {
+    fun `Follower should not become a Candidate it receives a message before the election timeout (3 ticks)`() {
         val network = Network()
 
         // Given
         val followerAddress = Source("127.0.0.1", 9001)
         val follower =
-            StateMachine(followerAddress, "NodeA", network = network, peers = emptyList(), config = Config(heartbeatTimeout = 3))
+            StateMachine(followerAddress, "NodeA", network = network, peers = emptyList(), config = Config(electionTimeout = 3))
                 .add(ReceivedMessage(Heartbeat(Source("127.0.0.1", 9002), Destination.from(followerAddress), 0, ""), 1))
 
         // First HeartBeatTimeOut

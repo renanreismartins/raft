@@ -15,7 +15,7 @@ class LeaderTest {
     @Test
     fun `Signals Heartbeat timeout`() {
         val network = Network()
-        network.clock = 4
+        network.clock = 10
 
         val leader = StateMachine(
             address = Source("127.0.0.1", 9001),
@@ -25,14 +25,14 @@ class LeaderTest {
             term = 1,
             role = Role.LEADER,
             termStartedAt = 4,
-            sentHeartbeatAt = 2
+            sentHeartbeatAt = 5
         )
 
         assertTrue(leader.hasHeartbeatTimedOut())
     }
 
     @Test
-    fun `On a Heartbeat Timeout (2 ticks), replicate the Log and reset the Heartbeat clock`() {
+    fun `On a Heartbeat Timeout (5 ticks), replicate the Log and reset the Heartbeat clock`() {
         // Given
         val network = Network()
 
@@ -48,7 +48,7 @@ class LeaderTest {
         )
 
         // When time passes and the Heartbeat timeout has not been reached
-        val timeMachine = TimeMachine2(network, leader).tick()
+        val timeMachine = TimeMachine2(network, leader).tick(4)
         val (_, leaderWithoutTimeout) = timeMachine
 
         // Then
@@ -56,7 +56,7 @@ class LeaderTest {
 
         // Leader reaches Heartbeat timeout then it resets Heartbeat clock
         val (_, leaderWithTimeout) = timeMachine.tick()
-        assertEquals(2, leaderWithTimeout.sentHeartbeatAt)
+        assertEquals(5, leaderWithTimeout.sentHeartbeatAt)
 
         //TODO check log replication
     }
