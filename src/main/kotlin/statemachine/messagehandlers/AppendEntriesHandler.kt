@@ -46,6 +46,7 @@ fun appendEntriesHandler(node: StateMachine, message: AppendEntries): StateMachi
         val ack = message.prefixLen + message.entries.size
 
         RaftLogger.logInfo(follower, "📝 Entries successfully appended. Ack: $ack")
+
         nodeWithEntries.toSend(
             AppendEntriesResponse(
                 follower.address,
@@ -75,6 +76,7 @@ fun appendEntriesHandler(node: StateMachine, message: AppendEntries): StateMachi
 fun appendEntries(follower: StateMachine, message: AppendEntries): StateMachine {
     RaftLogger.logInfo(follower, "📝 Appending Entries")
     RaftLogger.logInfo(follower, "No Entries in the message", message.entries.isEmpty())
+
     val followerWithTruncatedLog = if (message.entries.size > 0 && follower.log.size() > message.prefixLen) {
 
         RaftLogger.logInfo(follower, "Follower has more entries than prefixLen")
@@ -109,8 +111,8 @@ fun appendEntries(follower: StateMachine, message: AppendEntries): StateMachine 
         followerWithTruncatedLog
     }
 
-    val followerWithCommitedEntries = if (message.commitLength > follower.commitLength) {
-        val range = follower.commitLength..message.commitLength - 1
+    val followerWithCommitedEntries = if (message.commitLength > followerWithAppendedSuffix.commitLength) {
+        val range = followerWithAppendedSuffix.commitLength..message.commitLength - 1
         val commitedEntries = followerWithAppendedSuffix.log.entries.slice(range)
 
         //TODO: Deliver commitedEntries to the APP.. put this in a collection and then call Callback?
