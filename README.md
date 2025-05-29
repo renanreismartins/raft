@@ -161,30 +161,30 @@ If the Terms on the two corresponding Entries are different in the Follower and 
 
 <h3>Appending the new Entries</h3>
 With the out of sync entries removed, it is time to append the new Entries.
-For that the prefixLen and the suffix Len must be greater than the Follower's Log size. Could be that the entries to be appended are already contained in the Followers Log and they should not appended again. To accomplish that the first suffix log index to be appended should be the Followers Log size - prefixLen, until the end of the suffix (suffix - 1). To visualise this case, see images/07_appending_the_new_entries.jpg.
+For that the prefixLen and the suffix Len must be greater than the Follower's Log size. Could be that the entries to be appended are already contained in the Followers Log, and they should not be appended again. To accomplish that the first suffix log index to be appended should be the Followers Log size - prefixLen, until the end of the suffix (suffix - 1). To visualise this case, see images/07_appending_the_new_entries.jpg.
 
 <h3>Commiting Entries in the Follower</h3>
-The appended new entries are not yet commited in the Follower. The entries to be commited is a decision only the Leader can take. And it signals it to the Followers sending the 'leaderCommit' containted in the AppendEntries Message, if leaderCommit is greater than the commitLength in the Follower, then the Entries in the Follower Log from the index pointed by commitLength until leaderCommit - 1 should be delivered to the application and the commitLength should be updated to the leaderCommit value.
+The appended new entries are not yet commited in the Follower. The entries to be commited is a decision only the Leader can take. And it signaled to the Followers through the 'commitLength' contained in the AppendEntries Message, if leader commitLength is greater than the commitLength in the Follower, then the Entries in the Follower Log, from the index pointed by commitLength until leader commitLength - 1 should be delivered to the application and the commitLength in the Follower should be updated to the leader commitLength value.
 
 
 <h2>Raft (8/9) - Log acknowledgments in the Leader</h2>
 When receiving a Log Acknowledgment the Leader must perform the usual Term checks.
 If the Term from the Message is greater than its Term, then it should be demoted to Follower and set its Current term as the Message Term. Kleppmann's implementation also resets the Vote Record and cancel the Election timeout.
 
-For the Term check, Kleppmann does not check the Role, this implies that the Leader can send an AppendEntries and before the Acknowledgement arrives, it can have changed to another Role. In this case, it still have to update its Term but discard the Acknowledgement.
+For the Term check, Kleppmann does not check the Role, this implies that the Leader can send an AppendEntries and before the Acknowledgement arrives, it can have changed to another Role. In this case, it still has to update its Term but discard the Acknowledgement.
 
-In the case where the Leader has the same Term as the Message, it has to check if the Acknowledgement was successfull and that the Number of Entries acknowledged (ack) is at least the same as the number of entries previously acknowledged by the Follower, then the Leader can record the Followers acknowledgement setting the sentLength and ackLength to the ack number from the message and Commit its Log Entries.
+In the case where the Leader has the same Term as the Message, it has to check if the Acknowledgement was successful and that the Number of Entries acknowledged (ack) is at least the same as the number of entries previously acknowledged by the Follower, then the Leader can record the Followers acknowledgement setting the sentLength and ackLength to the ack number from the message and Commit its Log Entries.
 
 The reason for the Ack check, is that if a message arrives with an Ack smaller than the previously acknowledged by the Follower, it means the message is out of order (outdated, delayed) and other ack messages already acked the Log.
 
-If the Acknowledgement was not sucessful, could be there was a GAP in the Logs, for example, the Leader assumed the Follower has entries that it does not have (Follower lost part of the Logs and does not have logs synched with the entire prefixLen set on the Leader).
+If the Acknowledgement was not successful, could be there was a GAP in the Logs, for example, the Leader assumed the Follower has entries that it does not have (Follower lost part of the Logs and does not have logs synched with the entire prefixLen set on the Leader).
 
 For that we need to check if the Leader had previously attempted to send entries to the Follower (sentLength[follower] > 0) and try to replicate the log again, without sending the last Log Entry (sentLength[follower] = sentLength[follower] - 1). On the replication log this means shrinking the prefix by one and sending one more entry in the suffix.
 
 Note that this might trigger many messages between the Leader and the Follower until the logs gets synchronised. In terms of networking, one network call will trigger another (nested) call, that can trigger another call and so on, until the log gets synched.
 
 
-<h2>Raft (9/9) - Leader Commmits Log Entries</h2>
+<h2>Raft (9/9) - Leader Commits Log Entries</h2>
 The ackedLength is where the Leader records the number of Log Entries the Followers have confirmed they have received.
 If the 'commitLength' in the Leader is smaller than its Log size, the Log entry in the 'commitLength' index can be applied to the application and commited (commitLength + 1) if the Log has been acked by the quorum of the cluster, and the process repeated while 'commitLogLength' < log.size or until an entry without quorum is found.
 As there is no point in continuing check as subsequent entries will also not have been acked by the Followers and can't be commited.
