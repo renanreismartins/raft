@@ -24,12 +24,16 @@ fun appendEntryResponseHandler(node: StateMachine, message: AppendEntriesRespons
 
             RaftLogger.logInfo(node, "Entries acked by follower")
 
-            return commitLogEntries(
+            val nodeWithResponse = commitLogEntries(
                 node.copy(
                     sentLength = node.sentLength!! + (followerAddress to message.ack),
                     ackedLength = node.ackedLength + (followerAddress to message.ack)
                 )
             )
+
+            RaftLogger.logInfo(nodeWithResponse, "Leader with the AppendEntriesResponse: $nodeWithResponse")
+
+            return nodeWithResponse
 
         } else if (node.sentLength!!.getValue(followerAddress) > 0) {
             /**
@@ -71,7 +75,9 @@ fun commitLogEntries(leader: StateMachine): StateMachine {
     else {
         //TODO deliver logs to the application
         val commitLength = logIndicesToBeCommited.last() + 1
+
         RaftLogger.logInfo(leader, "Entries commited: $commitLength")
+
         leader.copy(commitLength = commitLength)
     }
 
